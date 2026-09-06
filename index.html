@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mezocykl">
+<meta name="theme-color" content="#0F172A">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 180 180%22%3E%3Crect width=%22180%22 height=%22180%22 rx=%2240%22 fill=%22%230F172A%22/%3E%3Crect x=%2230%22 y=%2278%22 width=%22120%22 height=%2224%22 rx=%226%22 fill=%22%233B82F6%22/%3E%3Crect x=%2218%22 y=%2258%22 width=%2222%22 height=%2264%22 rx=%228%22 fill=%22%23F1F5F9%22/%3E%3Crect x=%22140%22 y=%2258%22 width=%2222%22 height=%2264%22 rx=%228%22 fill=%22%23F1F5F9%22/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 180 180%22%3E%3Crect width=%22180%22 height=%22180%22 rx=%2240%22 fill=%22%230F172A%22/%3E%3Crect x=%2230%22 y=%2278%22 width=%22120%22 height=%2224%22 rx=%226%22 fill=%22%233B82F6%22/%3E%3Crect x=%2218%22 y=%2258%22 width=%2222%22 height=%2264%22 rx=%228%22 fill=%22%23F1F5F9%22/%3E%3Crect x=%22140%22 y=%2258%22 width=%2222%22 height=%2264%22 rx=%228%22 fill=%22%23F1F5F9%22/%3E%3C/svg%3E">
+<title>Mezocykl — masa</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0F172A;--card:#1E293B;--card2:#0F172A;--ink:#F1F5F9;--soft:#94A3B8;--line:#334155;
+      --acc:#3B82F6;--ok:#10B981;--warn:#F59E0B;--red:#EF4444;--purple:#A855F7}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{touch-action:manipulation;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:15px;
+     line-height:1.45;padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+h1,h2,h3,.n,.g{font-family:"Barlow Condensed",sans-serif}
+header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+       padding-top:env(safe-area-inset-top)}
+.hd{padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center}
+.hd h1{font-size:19px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.pill{font-size:11px;padding:3px 9px;border-radius:12px;background:#334155;color:var(--soft)}
+.pill.ok{background:var(--ok);color:#fff}.pill.err{background:var(--red);color:#fff}
+.weeks{display:flex;gap:5px;padding:0 14px 8px;overflow-x:auto}
+.weeks::-webkit-scrollbar{display:none}
+.wk{flex:0 0 auto;padding:6px 12px;border-radius:20px;background:var(--card);border:1px solid var(--line);
+    font-size:12.5px;color:var(--soft);cursor:pointer;white-space:nowrap}
+.wk.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.wk.dl.on{background:var(--ok);border-color:var(--ok)}
+.wk.tt.on{background:var(--warn);border-color:var(--warn);color:#0F172A}
+.days{display:flex;gap:5px;padding:0 14px 10px}
+.dy{flex:1;padding:8px 3px;border-radius:9px;background:var(--card);border:1px solid var(--line);
+    text-align:center;font-size:12.5px;font-weight:600;color:var(--soft);cursor:pointer}
+.dy.on{border-color:var(--acc);color:var(--ink)}
+.dy small{display:block;font-size:9px;font-weight:400;opacity:.75;margin-top:1px}
+.banner{margin:12px 14px;padding:11px 12px;border-radius:11px;font-size:13px;line-height:1.55;
+        background:var(--card);border:1px solid var(--line)}
+.banner.test{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.4)}
+.banner.dload{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.4)}
+.banner b{color:var(--ink)} .rir{font-family:"Barlow Condensed",sans-serif;font-size:17px;font-weight:700;color:var(--acc)}
+.legend{margin:12px 14px;padding:11px 12px;border-radius:11px;background:rgba(30,41,59,.6);
+        border:1px solid var(--line);font-size:11.5px;color:var(--soft);line-height:1.7}
+.k{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+.ex{margin:11px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ex.prio{border-left:4px solid var(--purple)}
+.exh{padding:11px 12px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;cursor:pointer}
+.exh h3{font-size:15.5px;font-weight:600;line-height:1.25}
+.exh .m{font-size:11px;color:var(--soft);margin-top:2px}
+.badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+       padding:2px 6px;border-radius:5px;margin-top:6px;border:1px solid}
+.b0{background:#334155;color:var(--soft);border-color:#475569}
+.b2{background:rgba(59,130,246,.15);color:#93C5FD;border-color:rgba(59,130,246,.4)}
+.b3{background:rgba(16,185,129,.15);color:#6EE7B7;border-color:rgba(16,185,129,.4)}
+.b4{background:rgba(245,158,11,.15);color:#FCD34D;border-color:rgba(245,158,11,.4)}
+.rest{font-size:10px;color:#64748B;margin-top:4px}.rest b{color:var(--soft)}
+.tgt{text-align:right;flex:0 0 auto}
+.tgt .s{font-family:"Barlow Condensed",sans-serif;font-size:19px;font-weight:700;color:var(--acc);line-height:1}
+.tgt .r{font-size:10px;color:#64748B;margin-top:3px;white-space:nowrap}
+.info{padding:0 12px 11px;font-size:12px;color:var(--soft);line-height:1.55;display:none}
+.info.on{display:block}.info .lead{color:var(--ink);margin-bottom:6px}
+.warm{background:rgba(15,23,42,.6);border-radius:8px;padding:8px 10px;font-size:11.5px}
+.sets{padding:0 12px 11px}
+.lbl{display:grid;grid-template-columns:32px 1fr 1fr;gap:8px;margin-bottom:5px}
+.lbl span{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#64748B;text-align:center}
+.row{display:grid;grid-template-columns:32px 1fr 1fr;gap:8px;align-items:center;margin-bottom:6px}
+.row .i{font-family:"Barlow Condensed",sans-serif;font-size:13px;color:var(--soft);text-align:center;font-weight:600}
+.row input{width:100%;padding:10px 6px;border-radius:9px;border:1px solid var(--line);background:var(--card2);
+           color:var(--ink);font-size:16px;text-align:center;font-family:"Barlow Condensed",sans-serif;font-weight:600}
+.row input:focus{outline:none;border-color:var(--acc)}
+.row input::placeholder{color:#475569;font-weight:400}
+.prev{font-size:10.5px;color:#64748B;text-align:center;padding-top:3px}.prev b{color:var(--warn)}
+.doc{margin:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.doc h2{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--acc);margin-bottom:7px}
+.doc h2:not(:first-child){margin-top:18px}
+.doc p{font-size:13px;color:var(--soft);margin-bottom:8px;line-height:1.6}.doc b{color:var(--ink)}
+.doc table{width:100%;border-collapse:collapse;margin:8px 0}
+.doc td,.doc th{padding:5px 4px;font-size:12.5px;border-bottom:1px solid var(--line);text-align:right}
+.doc td:first-child,.doc th:first-child{text-align:left}
+.doc th{color:#64748B;font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+.doc .n{font-weight:700;font-size:14px;color:var(--ink)}
+.btn{display:block;width:100%;padding:11px;margin-top:8px;border-radius:9px;border:1px solid var(--line);
+     background:var(--card2);color:var(--ink);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+.btn.g{background:var(--ok);border-color:var(--ok);color:#fff}
+textarea{width:100%;height:110px;margin-top:8px;padding:9px;border-radius:9px;border:1px solid var(--line);
+         background:var(--card2);color:var(--ink);font-size:11px;font-family:ui-monospace,monospace}
+.timer{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--card);border-top:1px solid var(--line);
+       padding:8px 10px calc(8px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:5px}
+.timer .t{font-family:"Barlow Condensed",sans-serif;font-size:24px;font-weight:700;min-width:52px}
+.timer .t.run{color:var(--ok)}
+.timer button{flex:1;padding:10px 2px;border-radius:9px;border:none;background:#334155;color:var(--ink);
+              font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
+.timer button.x{flex:0 0 36px;color:var(--soft)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd"><h1>Mezocykl — masa</h1><span class="pill" id="pill">80 → 84 kg</span></div>
+  <div class="weeks" id="weeks"></div>
+  <div class="days" id="days"></div>
+</header>
+<main id="main"></main>
+<div class="timer">
+  <span class="t" id="td">0:00</span>
+  <button onclick="T(30)">30s</button><button onclick="T(90)">90s</button>
+  <button onclick="T(120)">2m</button><button onclick="T(180)">3m</button>
+  <button onclick="T(240)">4m</button><button class="x" onclick="T(0)">&#10005;</button>
+</div>
+<script>
+const PLAN={
+  A: [
+    { n: "Wyciskanie sztangi poziomo", m: "Klatka środek · triceps", s: [4,4,5,5], r: "5–8", p: 1, warm: 1, rest: "3–4 min", pair: 0, tw: "87,5", tw2: "70", w: "Ciężkie złożone — zawsze solo, pełna przerwa." },
+    { n: "Wyciskanie hantli skośne 30°", m: "Klatka góra", s: [3,4,4,5], r: "8–12", p: 1, rest: "2–3 min", pair: 2, tw: "34", tw2: "27", w: "Twoja najsłabsza część klatki — stąd wysoka pozycja w sesji." },
+    { n: "Wiosłowanie sztangą w opadzie", m: "Środek pleców", s: [3,3,3,3], r: "8–12", rest: "2–3 min", pair: 2, tw: "50", tw2: "40", w: "Podtrzymanie. Po resecie techniki zacznij ostrożnie." },
+    { n: "Ściąganie uchwytu z góry jednorącz", m: "Najszerszy (bok pleców)", s: [3,3,3,3], r: "10–15", rest: "90–120 s", pair: 3, tw: "37,5", tw2: "30", w: "Na hammerze, siedząco, nachwytem." },
+    { n: "Prostowanie ramion zza głowy", m: "Triceps — głowa długa", s: [4,5,5,6], r: "10–15", p: 1, rest: "90–120 s", pair: 3, tw: "35", tw2: "28", w: "Zza głowy, bo tylko wtedy głowa długa jest w pełnym rozciągnięciu." },
+    { n: "Scarecrows", m: "Bark tylny · rotatory", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 4, tw: "3", tw2: "2,5", w: "Ławka 60°, klatką na oparciu. Ciężar celowo mały — to stożek rotatorów." },
+    { n: "Uginanie przedramion sztangą prostą", m: "Biceps", s: [2,2,2,2], r: "8–12", rest: "60–90 s", pair: 4, tw: "32", tw2: "25,5", w: "Prosta, nie łamana — jedyny ruch w pełnej supinacji w tym bloku." },
+    { n: "Wznosy bokiem na wyciągu", m: "Bark boczny", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 0, tw: "12", tw2: "9,5" },
+  ],
+  B: [
+    { n: "Przysiad ze sztangą na barkach", m: "Czworogłowe · pośladki", s: [4,4,4,4], r: "6–10", warm: 1, rest: "3–4 min", pair: 0, tw: "65", tw2: "52" },
+    { n: "Wypychanie bioder ze sztangą", m: "Pośladkowy wielki", s: [4,5,5,6], r: "8–12", p: 1, rest: "2–3 min", pair: 0, tw: "70", tw2: "56", w: "Obunóż — limitem ma być pośladek, nie stabilizacja." },
+    { n: "Martwy ciąg rumuński", m: "Dwugłowe uda · pośladki", s: [3,3,3,3], r: "8–12", rest: "2–3 min", pair: 2, tw: "110", tw2: "88" },
+    { n: "Wspięcia na łydki stojąc", m: "Brzuchaty łydki", s: [3,3,4,4], r: "10–15", rest: "60–90 s", pair: 2, tw: "70", tw2: "56", w: "Kolano proste = brzuchaty." },
+    { n: "Uginanie podudzi leżąc", m: "Dwugłowe uda", s: [3,3,3,3], r: "10–15", rest: "90–120 s", pair: 3, tw: "20", tw2: "16" },
+    { n: "Przyciąganie kolan w zwisie", m: "Brzuch dolny", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 3, tw: null, tw2: null },
+  ],
+  C: [
+    { n: "Pompki na poręczach z obciążeniem", m: "Klatka dół · triceps", s: [3,4,4,5], r: "8–12", p: 1, warm: 1, rest: "2–3 min", pair: 0, tw: "+25", tw2: "+20" },
+    { n: "Wyciskanie hantli poziomo", m: "Klatka środek", s: [3,3,4,4], r: "10–15", p: 1, rest: "2–3 min", pair: 2, tw: "32", tw2: "25,5", w: "Hantle = większy zakres niż sztanga. Inny bodziec, nie powtórka z dnia A." },
+    { n: "Podciąganie nachwytem", m: "Najszerszy · biceps", s: [3,3,3,3], r: "6–10", rest: "2–3 min", pair: 2, tw: "+7,5", tw2: "+6" },
+    { n: "Rozpiętki na bramie", m: "Klatka — rozciągnięcie", s: [3,3,4,4], r: "12–20", p: 1, rest: "90–120 s", pair: 3, tw: "40", tw2: "32", w: "Jedyny ruch obciążający klatkę w pełnym rozciągnięciu." },
+    { n: "Wiosłowanie hantlem jednorącz", m: "Najszerszy · środek pleców", s: [3,3,3,3], r: "10–15", rest: "90–120 s", pair: 3, tw: "19", tw2: "15" },
+    { n: "Prostowanie ramion na wyciągu", m: "Triceps — głowa boczna", s: [4,5,6,6], r: "10–15", p: 1, rest: "60–90 s", pair: 4, tw: "35", tw2: "28" },
+    { n: "Wznosy bokiem z hantlami", m: "Bark boczny", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 4, tw: "10", tw2: "8" },
+    { n: "Zottman curl", m: "Biceps · ramienno-promieniowy", s: [2,2,2,2], r: "10–15", rest: "60–90 s", pair: 0, tw: "12", tw2: "9,5" },
+  ],
+  D: [
+    { n: "Martwy ciąg staggered / trap bar", m: "Cały tył ciała", s: [4,4,4,4], r: "5–8", warm: 1, rest: "3–5 min", pair: 0, tw: "85", tw2: "68" },
+    { n: "Wykroki do tyłu z podwyższenia", m: "Czworogłowe · pośladki", s: [3,3,3,3], r: "8–12/nogę", rest: "2–3 min", pair: 2, tw: "32", tw2: "25,5" },
+    { n: "Wspięcia na łydki siedząc", m: "Płaszczkowaty", s: [3,3,4,4], r: "12–20", rest: "60–90 s", pair: 2, tw: "120", tw2: "96", w: "Kolano zgięte = płaszczkowaty." },
+    { n: "Odwodzenie w biodrze (maszyna)", m: "Pośladek średni", s: [3,4,4,5], r: "15–20", p: 1, rest: "60–90 s", pair: 3, tw: null, tw2: null, w: "Nowe ćwiczenie — znajdź ciężar na 20 powtórzeń." },
+    { n: "Wyciskanie nóg na suwnicy", m: "Czworogłowe", s: [3,3,3,3], r: "10–15", rest: "2–3 min", pair: 3, tw: "115", tw2: "92" },
+    { n: "Prostowanie podudzi siedząc", m: "Czworogłowe (izolacja)", s: [2,2,2,2], r: "12–20", rest: "60–90 s", pair: 4, tw: "30", tw2: "24" },
+    { n: "Spięcia brzucha na piłce", m: "Brzuch górny", s: [3,3,3,3], r: "15–20", rest: "60–90 s", pair: 4, tw: "15", tw2: "12" },
+  ],
+};
+
+const WEEKS=[{id:'t',label:'Test',type:'test'},{id:'1',label:'Tydz. 1',type:'acc',rir:'3\u20134'},
+ {id:'2',label:'Tydz. 2',type:'acc',rir:'2\u20133'},{id:'3',label:'Tydz. 3',type:'acc',rir:'1\u20132'},
+ {id:'4',label:'Tydz. 4',type:'acc',rir:'0\u20131'},{id:'d',label:'Deload',type:'dload',rir:'4\u20135'}];
+const DAYS=[{id:'A',name:'G\u00f3ra',tag:'klatka ci\u0119\u017cka'},{id:'B',name:'D\u00f3\u0142',tag:'po\u015bladki'},
+ {id:'C',name:'G\u00f3ra',tag:'klatka obj.'},{id:'D',name:'D\u00f3\u0142',tag:'nogi'}];
+const PC={2:'b2',3:'b3',4:'b4'};
+
+/* Warstwa zapisu: najpierw mechanizm Claude, potem pamiec przegladarki */
+const S={mode:'none',
+ async init(){
+  if(window.storage&&typeof window.storage.set==='function'){
+   try{await window.storage.set('rp_probe','1');this.mode='claude';return;}catch(e){}}
+  try{localStorage.setItem('rp_probe','1');this.mode='local';return;}catch(e){}
+  this.mode='none';},
+ async get(k){
+  try{
+   if(this.mode==='claude'){const r=await window.storage.get(k);return r?r.value:null;}
+   if(this.mode==='local')return localStorage.getItem(k);
+  }catch(e){}
+  return null;},
+ async set(k,v){
+  if(this.mode==='claude'){await window.storage.set(k,v);return;}
+  if(this.mode==='local'){localStorage.setItem(k,v);return;}
+  throw new Error('brak zapisu');}
+};
+let W='1', D='A', log={}, waga={}, kolejka=[];
+const ENDPOINT='https://script.google.com/macros/s/AKfycbylgrHYXhqqLJwxKGD7VhpEMdjf-TrDMMFnQfF8qREdr44vnPQOXbcsD-fbdOr8VqFZ/exec';
+const dzis=()=>new Date().toISOString().slice(0,10);
+
+function kolejkuj(payload){
+  kolejka.push(payload);
+  try{ S.set('rp_queue',JSON.stringify(kolejka)); }catch(e){}
+  wyslij();
+}
+let wysylanie=false;
+async function wyslij(){
+  if(wysylanie||!kolejka.length) return;
+  if(!navigator.onLine){ pill(kolejka.length+' w kolejce','warn'); return; }
+  wysylanie=true;
+  while(kolejka.length){
+    const p=kolejka[0];
+    try{
+      await fetch(ENDPOINT,{method:'POST',mode:'no-cors',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p)});
+      kolejka.shift();
+      try{ await S.set('rp_queue',JSON.stringify(kolejka)); }catch(e){}
+    }catch(e){ pill(kolejka.length+' w kolejce','warn'); wysylanie=false; return; }
+  }
+  wysylanie=false;
+  pill('w arkuszu','ok');
+}
+window.addEventListener('online',wyslij);
+
+function pill(t,c){const p=document.getElementById('pill');p.textContent=t;p.className='pill '+(c||'');
+  if(c==='ok')setTimeout(()=>{p.textContent='80 \u2192 84 kg';p.className='pill';},1200);}
+async function save(){
+  try{ await S.set('rp_log',JSON.stringify(log)); pill('zapisano','ok'); }
+  catch(e){ pill('B\u0141\u0104D ZAPISU','err'); }
+}
+function nSets(ex){const w=WEEKS.find(x=>x.id===W);
+  if(w.type==='test')return 3; if(w.type==='dload')return Math.max(2,Math.round(ex.s[0]/2));
+  return ex.s[parseInt(W)-1];}
+function setW(w){W=w;S.set('rp_w',w).catch(function(){});render();scrollTo(0,0);}
+function setD(d){D=d;S.set('rp_d',d).catch(function(){});render();scrollTo(0,0);}
+function upd(id,j,f,v){
+  (log[id]=log[id]||{}); (log[id][j]=log[id][j]||{}); log[id][j][f]=v; save();
+  clearTimeout(upd._t); upd._t=setTimeout(()=>syncSeria(id,j),1500);
+}
+function syncSeria(id,j){
+  const d=(log[id]||{})[j]; if(!d||!d.kg||!d.rp) return;
+  const [wk,dz,i]=id.split('_'); const ex=PLAN[dz][+i]; if(!ex) return;
+  const wname=(WEEKS.find(x=>x.id===wk)||{}).label||wk;
+  const isT=wk==='t';
+  const seria = isT&&ex.tw ? (j===0?'T':'\u221220') : String(j+1);
+  kolejkuj({type:'trening',rows:[{data:dzis(),tydzien:wname,dzien:dz,cwiczenie:ex.n,
+    seria:seria,ciezar:d.kg,powt:d.rp,rir:(WEEKS.find(x=>x.id===wk)||{}).rir||'',uwagi:''}]});
+}
+
+function render(){
+  document.getElementById('weeks').innerHTML=WEEKS.map(w=>
+    '<div class="wk '+(w.type==='dload'?'dl':'')+' '+(w.type==='test'?'tt':'')+' '+(w.id===W?'on':'')+
+    '" onclick="setW(\''+w.id+'\')">'+w.label+'</div>').join('');
+  document.getElementById('days').innerHTML=DAYS.map(d=>
+    '<div class="dy '+(d.id===D?'on':'')+'" onclick="setD(\''+d.id+'\')">'+d.id+' \u00b7 '+d.name+
+    '<small>'+d.tag+'</small></div>').join('')+
+    '<div class="dy '+(D==='W'?'on':'')+'" style="flex:0 0 52px" onclick="setD(\'W\')">Waga<small>pomiar</small></div>'+
+    '<div class="dy '+(D==='P'?'on':'')+'" style="flex:0 0 50px" onclick="setD(\'P\')">Plan<small>zasady</small></div>';
+  document.getElementById('main').innerHTML = D==='P'? planHTML() : (D==='W'? wagaHTML() : sessHTML());
+}
+
+function sessHTML(){
+  const w=WEEKS.find(x=>x.id===W); let b='';
+  if(w.type==='test') b='<div class="banner test"><b>Tydzie\u0144 testowy.</b> Seria <b>T</b> \u2014 ci\u0119\u017car submaksymalny, dojd\u017a blisko 1 RIR. Potem zdejmij 20% (<b>\u221220</b>) i reszt\u0119 r\u00f3b na maksa. Liczby to propozycje z Twojej historii \u2014 nadpisz, je\u015bli wyjdzie inaczej.<br><br><b>Na tydzie\u0144 1:</b> ten sam ci\u0119\u017car co w serii T, ale zatrzymuj si\u0119 3\u20134 powt\u00f3rzenia wcze\u015bniej.</div>';
+  else if(w.type==='dload') b='<div class="banner dload"><b>Deload.</b> Po\u0142owa serii, ~60% ci\u0119\u017caru, RIR <span class="rir">4\u20135</span>. Masz wyj\u015b\u0107 z poczuciem, \u017ce nic nie zrobi\u0142e\u015b \u2014 to zamierzone.</div>';
+  else b='<div class="banner">Cel na ten tydzie\u0144: <b>RIR</b> <span class="rir">'+w.rir+'</span> \u2014 tyle powt\u00f3rze\u0144 zostawiasz w zapasie. Ci\u0119\u017car ten sam we wszystkich seriach, powt\u00f3rzenia b\u0119d\u0105 spada\u0107.</div>';
+  b+='<div class="legend"><span class="k" style="background:var(--purple)"></span><b style="color:var(--ink)">Fioletowy pasek</b> \u2014 priorytet bloku (klatka, triceps, po\u015bladki). Tylko tym rosn\u0105 serie.<br><span class="k" style="background:#93C5FD"></span><span class="k" style="background:#6EE7B7"></span><span class="k" style="background:#FCD34D"></span><b style="color:var(--ink)">Superserie</b> \u2014 ten sam kolor = robisz na przemian, pe\u0142na przerwa po parze.</div>';
+  const isT = W==='t';
+  return b+PLAN[D].map((ex,i)=>{
+    const id=W+'_'+D+'_'+i, ns=nSets(ex);
+    let rows='';
+    for(let j=0;j<ns;j++){
+      const d=(log[id]||{})[j]||{};
+      const tag = isT&&ex.tw ? (j===0?'T':'\u221220') : (j+1);
+      const ph  = isT&&ex.tw ? (j===0?ex.tw:ex.tw2) : 'kg';
+      rows+='<div class="row"><span class="i">'+tag+'</span>'+
+        '<input inputmode="decimal" placeholder="'+ph+'" value="'+(d.kg||'')+'" oninput="upd(\''+id+'\','+j+',\'kg\',this.value)">'+
+        '<input inputmode="numeric" placeholder="powt" value="'+(d.rp||'')+'" oninput="upd(\''+id+'\','+j+',\'rp\',this.value)"></div>';
+    }
+    let prev='';
+    if(!isNaN(parseInt(W))&&parseInt(W)>1){
+      const p=log[(parseInt(W)-1)+'_'+D+'_'+i];
+      if(p){const t=Object.values(p).filter(x=>x.kg).map(x=>x.kg+'\u00d7'+(x.rp||'?')).join('  ');
+        if(t) prev='<div class="prev">poprzedni tydzie\u0144: <b>'+t+'</b></div>';}
+    }
+    return '<div class="ex '+(ex.p?'prio':'')+'">'+
+      '<div class="exh" onclick="this.parentNode.querySelector(\'.info\').classList.toggle(\'on\')">'+
+      '<div><h3>'+ex.n+'</h3><div class="m">'+ex.m+(ex.p?' \u00b7 priorytet':'')+'</div>'+
+      '<span class="badge '+(ex.pair?PC[ex.pair]:'b0')+'">'+(ex.pair?('superseria '+D+ex.pair):'solo')+'</span>'+
+      '<div class="rest">przerwa: <b>'+(ex.pair?('0\u201330 s w parze, '+ex.rest+' po parze'):ex.rest)+'</b></div></div>'+
+      '<div class="tgt"><div class="s">'+(isT&&ex.tw?ex.tw+' kg':ns+'\u00d7')+'</div>'+
+      '<div class="r">'+(isT&&ex.tw?'potem '+ex.tw2+' kg':ex.r+' powt.')+'</div></div></div>'+
+      '<div class="info">'+(ex.w?'<div class="lead">'+ex.w+'</div>':'')+
+      '<div class="warm">'+(ex.warm?'<b>Rozgrzewka 12-8-4:</b> 12 powt. ~50% ci\u0119\u017caru roboczego \u2192 8 powt. ~70% \u2192 4 powt. ~85%. Serii rozgrzewkowych nie zapisujesz.':'Rozgrzewka: 1 lekka seria wystarczy.')+'</div></div>'+
+      '<div class="sets"><div class="lbl"><span></span><span>ci\u0119\u017car</span><span>powt.</span></div>'+rows+prev+'</div></div>';
+  }).join('');
+}
+
+function wagaHTML(){
+  const w=waga||{};
+  return '<div class="banner"><b>Pomiar masy.</b> 1\u20132\u00d7 w tygodniu, rano na czczo, po toalecie. Liczy si\u0119 trend, nie pojedynczy pomiar. Cel: <b>+0,5 kg na 2 tygodnie</b>, stop w okolicy 84\u201385 kg.</div>'+
+  '<div class="ex"><div class="sets" style="padding-top:11px">'+
+  '<div class="lbl"><span></span><span>waga (kg)</span><span>pas (cm)</span></div>'+
+  '<div class="row"><span class="i">'+dzis().slice(5)+'</span>'+
+  '<input inputmode="decimal" placeholder="80,5" value="'+(w.waga||'')+'" oninput="updW(\'waga\',this.value)">'+
+  '<input inputmode="decimal" placeholder="79" value="'+(w.pas||'')+'" oninput="updW(\'pas\',this.value)"></div>'+
+  '<div class="prev">Wpis trafia do arkusza pod dzisiejsz\u0105 dat\u0105. Ponowne wpisanie tego samego dnia nadpisuje.</div>'+
+  '</div></div>'+
+  '<div class="legend">Obw\u00f3d pasa mierz w tym samym miejscu, rano, bez wci\u0105gania brzucha. Je\u015bli przy +2 kg masy pas ur\u00f3s\u0142 o wi\u0119cej ni\u017c 1 cm, tempo jest za szybkie.</div>';
+}
+function updW(f,v){
+  waga[f]=v; try{ S.set('rp_waga',JSON.stringify(waga)); }catch(e){}
+  clearTimeout(updW._t); updW._t=setTimeout(()=>{
+    if(!waga.waga) return;
+    kolejkuj({type:'waga',data:dzis(),waga:waga.waga,pas:waga.pas||'',uwagi:''});
+  },1500);
+}
+function planHTML(){return '<div class="doc">'+
+'<h2>Struktura bloku</h2><p>Sze\u015b\u0107 tygodni: <b>tydzie\u0144 testowy</b>, cztery tygodnie akumulacji, <b>deload</b>. Potem nast\u0119pny mezocykl od nowa, z ci\u0119\u017carami z ostatniego tygodnia.</p>'+
+'<table><tr><th>Tydzie\u0144</th><th>Serie</th><th>RIR</th></tr>'+
+'<tr><td>Testowy</td><td class="n">3</td><td class="n">\u2014</td></tr>'+
+'<tr><td>1</td><td class="n">bazowe</td><td class="n">3\u20134</td></tr>'+
+'<tr><td>2</td><td class="n">+1 na priorytetach</td><td class="n">2\u20133</td></tr>'+
+'<tr><td>3</td><td class="n">+1</td><td class="n">1\u20132</td></tr>'+
+'<tr><td>4</td><td class="n">+1</td><td class="n">0\u20131</td></tr>'+
+'<tr><td>Deload</td><td class="n">po\u0142owa</td><td class="n">4\u20135</td></tr></table>'+
+'<h2>Co to jest RIR</h2><p><b>Reps in reserve</b> \u2014 ile powt\u00f3rze\u0144 zostawiasz w zapasie. Nie robisz serii do upadku, bo wtedy kolejne si\u0119 sypi\u0105 i tracisz obj\u0119to\u015b\u0107, kt\u00f3ra jest g\u0142\u00f3wnym motorem wzrostu.</p>'+
+'<p>Rozpoznajesz to <b>po tempie, nie po odczuciu</b>: gdy pr\u0119dko\u015b\u0107 wyra\u017anie spada mimo maksymalnego wysi\u0142ku, jeste\u015b przy 1\u20132 RIR. Wi\u0119kszo\u015b\u0107 ludzi przeszacowuje wysi\u0142ek \u2014 je\u015bli nie masz pewno\u015bci, za\u0142\u00f3\u017c, \u017ce zostawiasz wi\u0119cej.</p>'+
+'<h2>Jak zachowuj\u0105 si\u0119 serie</h2><p><b>Ten sam ci\u0119\u017car we wszystkich seriach.</b> Powt\u00f3rzenia b\u0119d\u0105 spada\u0107 \u2014 8, 7, 7, 6 to prawid\u0142owy przebieg.</p>'+
+'<p><b>Ci\u0119\u017car dok\u0142adasz</b>, gdy trafisz g\u00f3rn\u0105 granic\u0119 zakresu we wszystkich seriach przy za\u0142o\u017conym RIR. <b>Zdejmujesz</b>, gdy spadasz poni\u017cej dolnej granicy \u2014 to nie sygna\u0142 do deloadu, tylko \u017ce ci\u0119\u017car jest za du\u017cy.</p>'+
+'<h2>Dlaczego serie rosn\u0105</h2><p>Organizm przyzwyczaja si\u0119 do bod\u017aca. Startujesz od <b>MEV</b>, przechodzisz przez <b>MAV</b> i ko\u0144czysz przy <b>MRV</b> \u2014 granicy regeneracji. Gdyby\u015b startowa\u0142 od razu wysoko, nie mia\u0142by\u015b dok\u0105d i\u015b\u0107.</p>'+
+'<h2>Specjalizacja bloku</h2><p>Priorytet: <b>klatka 16\u219223 serii</b>, <b>triceps 8\u219212</b>, <b>po\u015bladki 7\u219211</b>. P\u0142ac\u0105 za to plecy (14\u219212), bark boczny (8\u21926) i biceps (6\u21924) \u2014 przy podtrzymaniu nie tracisz masy.</p>'+
+'<h2>Supersety</h2><p>Ci\u0119\u017ckie z\u0142o\u017cone zawsze solo. W tygodniach 1\u20133 \u0142\u0105cz spokojnie, w tygodniu 4 roz\u0142\u0105czaj \u2014 blisko MRV ka\u017cda seria ma by\u0107 wykonana najlepiej jak si\u0119 da.</p>'+
+'<h2>Kopia danych</h2><p>Dane zapisuj\u0105 si\u0119 w tej przegl\u0105darce. Skopiuj je przed zmian\u0105 telefonu albo czyszczeniem danych.</p>'+
+'<button class="btn g" onclick="exp()">Skopiuj kopi\u0119 do schowka</button>'+
+'<button class="btn" onclick="document.getElementById(\'imp\').style.display=\'block\'">Wklej kopi\u0119</button>'+
+'<div id="imp" style="display:none"><textarea id="ta" placeholder="wklej tutaj"></textarea>'+
+'<button class="btn" onclick="doImp()">Wczytaj</button></div></div>';}
+
+function exp(){const s=JSON.stringify(log);
+  if(navigator.clipboard){navigator.clipboard.writeText(s).then(()=>pill('skopiowano','ok'),()=>prompt('Skopiuj:',s));}
+  else prompt('Skopiuj:',s);}
+function doImp(){try{log=JSON.parse(document.getElementById('ta').value);save();render();pill('wczytano','ok');}
+  catch(e){pill('B\u0141\u0104D','err');}}
+
+let tm=null,left=0;
+function T(s){left=s;clearInterval(tm);
+  document.getElementById('td').className='t'+(s>0?' run':'');
+  if(s>0)tm=setInterval(()=>{left--;dr();if(left<=0){clearInterval(tm);
+    document.getElementById('td').className='t';if(navigator.vibrate)navigator.vibrate([200,100,200]);}},1000);
+  dr();}
+function dr(){const m=Math.floor(Math.max(0,left)/60),s=Math.max(0,left)%60;
+  document.getElementById('td').textContent=m+':'+String(s).padStart(2,'0');}
+
+(async function(){
+  await S.init();
+  if(S.mode!=='none'){
+    const l=await S.get('rp_log'); if(l){try{log=JSON.parse(l);}catch(e){}}
+    const w=await S.get('rp_w'); if(w)W=w;
+    const d=await S.get('rp_d'); if(d)D=d;
+  }
+  render();
+  if(S.mode==='none') pill('BRAK ZAPISU','err');
+})();
+</script>
+</body>
+</html>
