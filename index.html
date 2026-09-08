@@ -203,6 +203,35 @@ async function wyslij(){
 }
 window.addEventListener('online',wyslij);
 
+/* --- pobranie danych z arkusza: odtwarza wpisy po podmianie kodu --- */
+async function pobierzZArkusza(){
+  if(!navigator.onLine) return;
+  pill('pobieram\u2026','warn');
+  try{
+    const r=await fetch(ENDPOINT+'?akcja=pobierz',{method:'GET'});
+    const j=await r.json();
+    if(!j.ok) throw 0;
+    let n=0;
+    (j.trening||[]).forEach(row=>{
+      const wk=(WEEKS.find(x=>x.label===row.tydzien)||{}).id; if(!wk) return;
+      const dz=row.dzien; if(!PLAN[dz]) return;
+      const i=PLAN[dz].findIndex(e=>e.n===row.cwiczenie); if(i<0) return;
+      const j2=parseInt(row.seria)-1; if(isNaN(j2)||j2<0) return;
+      const id=wk+'_'+dz+'_'+i;
+      log[id]=log[id]||{}; log[id][j2]=log[id][j2]||{};
+      if(!log[id][j2].kg){ log[id][j2].kg=String(row.ciezar); log[id][j2].rp=String(row.powt); n++; }
+    });
+    if(j.waga&&j.waga.length){
+      const ost=j.waga[j.waga.length-1];
+      if(!waga.waga){ waga={waga:String(ost.waga),pas:String(ost.pas||'')}; }
+    }
+    await S.set('rp_log',JSON.stringify(log));
+    await S.set('rp_waga',JSON.stringify(waga));
+    pill(n?('odtworzono '+n):'aktualne','ok');
+    render();
+  }catch(e){ pill('brak pobrania','warn'); }
+}
+
 function pill(t,c){const p=document.getElementById('pill');p.textContent=t;p.className='pill '+(c||'');
   if(c==='ok')setTimeout(()=>{p.textContent='80 \u2192 84 kg';p.className='pill';},1200);}
 async function save(){
@@ -214,18 +243,21 @@ function nSets(ex){const w=WEEKS.find(x=>x.id===W);
   return ex.s[parseInt(W)-1];}
 function setW(w){W=w;S.set('rp_w',w).catch(function(){});render();scrollTo(0,0);}
 function setD(d){D=d;S.set('rp_d',d).catch(function(){});render();scrollTo(0,0);}
+const timery={};
 function upd(id,j,f,v){
   (log[id]=log[id]||{}); (log[id][j]=log[id][j]||{}); log[id][j][f]=v; save();
-  clearTimeout(upd._t); upd._t=setTimeout(()=>syncSeria(id,j),1500);
+  const k=id+'_'+j;
+  clearTimeout(timery[k]);
+  timery[k]=setTimeout(()=>syncSeria(id,j),1500);
 }
 function syncSeria(id,j){
   const d=(log[id]||{})[j]; if(!d||!d.kg||!d.rp) return;
   const [wk,dz,i]=id.split('_'); const ex=PLAN[dz][+i]; if(!ex) return;
-  const wname=(WEEKS.find(x=>x.id===wk)||{}).label||wk;
+  const w=WEEKS.find(x=>x.id===wk)||{};
   const isT=wk==='t';
-  const seria = isT&&ex.tw ? (j===0?'T':'\u221220') : String(j+1);
-  kolejkuj({type:'trening',rows:[{data:dzis(),tydzien:wname,dzien:dz,cwiczenie:ex.n,
-    seria:seria,ciezar:d.kg,powt:d.rp,rir:(WEEKS.find(x=>x.id===wk)||{}).rir||'',uwagi:''}]});
+  kolejkuj({type:'trening',rows:[{data:dzis(),tydzien:w.label||wk,dzien:dz,cwiczenie:ex.n,
+    seria:String(j+1),ciezar:d.kg,powt:d.rp,rir:w.rir||'',
+    uwagi:(isT&&ex.tw)?(j===0?'seria T':'po \u221220%'):''}]});
 }
 
 function render(){
@@ -235,9 +267,88 @@ function render(){
   document.getElementById('days').innerHTML=DAYS.map(d=>
     '<div class="dy '+(d.id===D?'on':'')+'" onclick="setD(\''+d.id+'\')">'+d.id+' \u00b7 '+d.name+
     '<small>'+d.tag+'</small></div>').join('')+
-    '<div class="dy '+(D==='W'?'on':'')+'" style="flex:0 0 52px" onclick="setD(\'W\')">Waga<small>pomiar</small></div>'+
+    '<div class="dy '+(D==='W'?'on':'')+'" style="flex:0 0 50px" onclick="setD(\'W\')">Waga<small>pomiar</small></div>'+
+    '<div class="dy '+(D==='K'?'on':'')+'" style="flex:0 0 54px" onclick="setD(\'K\')">Jedzenie<small>makro</small></div>'+
     '<div class="dy '+(D==='P'?'on':'')+'" style="flex:0 0 50px" onclick="setD(\'P\')">Plan<small>zasady</small></div>';
-  document.getElementById('main').innerHTML = D==='P'? planHTML() : (D==='W'? wagaHTML() : sessHTML());
+  document.getElementById('main').innerHTML = D==='P'? planHTML() : (D==='W'? wagaHTML() : (D==='K'? kalkHTML() : sessHTML()));
+}
+
+
+/* ---- mapa mięśni: ćwiczenie -> podświetlone partie ---- */
+const MM={
+'Wyciskanie sztangi poziomo':['klatka','triceps','barkP'],
+'Wyciskanie hantli skośne 30°':['klatkaG','barkP','triceps'],
+'Wiosłowanie sztangą w opadzie':['plecyS','najsz','biceps'],
+'Ściąganie uchwytu z góry jednorącz':['najsz','biceps'],
+'Prostowanie ramion zza głowy':['triceps'],
+'Scarecrows':['barkT','plecyS'],
+'Uginanie przedramion sztangą prostą':['biceps'],
+'Wznosy bokiem na wyciągu':['barkB'],
+'Przysiad ze sztangą na barkach':['czwor','posl','prost'],
+'Wypychanie bioder ze sztangą':['posl'],
+'Martwy ciąg rumuński':['dwug','posl','prost'],
+'Wspięcia na łydki stojąc':['lydki'],
+'Uginanie podudzi leżąc':['dwug'],
+'Przyciąganie kolan w zwisie':['brzuch'],
+'Pompki na poręczach z obciążeniem':['klatka','triceps'],
+'Wyciskanie hantli poziomo':['klatka','barkP','triceps'],
+'Podciąganie nachwytem':['najsz','biceps'],
+'Rozpiętki na bramie':['klatka'],
+'Wiosłowanie hantlem jednorącz':['najsz','plecyS'],
+'Prostowanie ramion na wyciągu':['triceps'],
+'Wznosy bokiem z hantlami':['barkB'],
+'Zottman curl':['biceps','przedr'],
+'Martwy ciąg staggered / trap bar':['dwug','posl','prost','plecyS'],
+'Wykroki do tyłu z podwyższenia':['czwor','posl'],
+'Wspięcia na łydki siedząc':['lydki'],
+'Odwodzenie w biodrze (maszyna)':['poslS'],
+'Wyciskanie nóg na suwnicy':['czwor','posl'],
+'Prostowanie podudzi siedząc':['czwor'],
+'Spięcia brzucha na piłce':['brzuch']};
+
+function sylwetka(akt){
+  const on=k=>akt.indexOf(k)>=0?'#3B82F6':'#334155';
+  const o=k=>akt.indexOf(k)>=0?'1':'.45';
+  return '<svg viewBox="0 0 200 130" style="width:100%;max-width:280px;display:block;margin:6px auto 2px">'+
+  /* PRZÓD */
+  '<text x="47" y="10" fill="#64748B" font-size="7" text-anchor="middle" font-family="sans-serif">PRZÓD</text>'+
+  '<circle cx="47" cy="22" r="7" fill="#334155" opacity=".45"/>'+
+  '<rect x="39" y="31" width="16" height="5" rx="2" fill="'+on('kaptury')+'" opacity="'+o('kaptury')+'"/>'+
+  '<ellipse cx="34" cy="40" rx="6" ry="5" fill="'+on('barkP')+'" opacity="'+o('barkP')+'"/>'+
+  '<ellipse cx="60" cy="40" rx="6" ry="5" fill="'+on('barkP')+'" opacity="'+o('barkP')+'"/>'+
+  '<ellipse cx="30" cy="42" rx="4" ry="6" fill="'+on('barkB')+'" opacity="'+o('barkB')+'"/>'+
+  '<ellipse cx="64" cy="42" rx="4" ry="6" fill="'+on('barkB')+'" opacity="'+o('barkB')+'"/>'+
+  '<rect x="37" y="37" width="20" height="9" rx="4" fill="'+on('klatkaG')+'" opacity="'+o('klatkaG')+'"/>'+
+  '<rect x="37" y="45" width="20" height="10" rx="4" fill="'+on('klatka')+'" opacity="'+o('klatka')+'"/>'+
+  '<ellipse cx="30" cy="53" rx="4" ry="7" fill="'+on('biceps')+'" opacity="'+o('biceps')+'"/>'+
+  '<ellipse cx="64" cy="53" rx="4" ry="7" fill="'+on('biceps')+'" opacity="'+o('biceps')+'"/>'+
+  '<ellipse cx="28" cy="66" rx="3.5" ry="7" fill="'+on('przedr')+'" opacity="'+o('przedr')+'"/>'+
+  '<ellipse cx="66" cy="66" rx="3.5" ry="7" fill="'+on('przedr')+'" opacity="'+o('przedr')+'"/>'+
+  '<rect x="39" y="56" width="16" height="16" rx="3" fill="'+on('brzuch')+'" opacity="'+o('brzuch')+'"/>'+
+  '<ellipse cx="41" cy="86" rx="6" ry="13" fill="'+on('czwor')+'" opacity="'+o('czwor')+'"/>'+
+  '<ellipse cx="53" cy="86" rx="6" ry="13" fill="'+on('czwor')+'" opacity="'+o('czwor')+'"/>'+
+  '<ellipse cx="41" cy="110" rx="4" ry="9" fill="'+on('lydki')+'" opacity="'+o('lydki')+'"/>'+
+  '<ellipse cx="53" cy="110" rx="4" ry="9" fill="'+on('lydki')+'" opacity="'+o('lydki')+'"/>'+
+  /* TYŁ */
+  '<text x="150" y="10" fill="#64748B" font-size="7" text-anchor="middle" font-family="sans-serif">TYŁ</text>'+
+  '<circle cx="150" cy="22" r="7" fill="#334155" opacity=".45"/>'+
+  '<rect x="140" y="31" width="20" height="7" rx="3" fill="'+on('kaptury')+'" opacity="'+o('kaptury')+'"/>'+
+  '<ellipse cx="137" cy="41" rx="6" ry="5" fill="'+on('barkT')+'" opacity="'+o('barkT')+'"/>'+
+  '<ellipse cx="163" cy="41" rx="6" ry="5" fill="'+on('barkT')+'" opacity="'+o('barkT')+'"/>'+
+  '<rect x="140" y="38" width="20" height="10" rx="3" fill="'+on('plecyS')+'" opacity="'+o('plecyS')+'"/>'+
+  '<path d="M138 48 L162 48 L157 66 L143 66 Z" fill="'+on('najsz')+'" opacity="'+o('najsz')+'"/>'+
+  '<ellipse cx="133" cy="54" rx="4" ry="7" fill="'+on('triceps')+'" opacity="'+o('triceps')+'"/>'+
+  '<ellipse cx="167" cy="54" rx="4" ry="7" fill="'+on('triceps')+'" opacity="'+o('triceps')+'"/>'+
+  '<rect x="146" y="60" width="8" height="14" rx="2" fill="'+on('prost')+'" opacity="'+o('prost')+'"/>'+
+  '<ellipse cx="144" cy="79" rx="7" ry="7" fill="'+on('posl')+'" opacity="'+o('posl')+'"/>'+
+  '<ellipse cx="156" cy="79" rx="7" ry="7" fill="'+on('posl')+'" opacity="'+o('posl')+'"/>'+
+  '<ellipse cx="137" cy="76" rx="4" ry="5" fill="'+on('poslS')+'" opacity="'+o('poslS')+'"/>'+
+  '<ellipse cx="163" cy="76" rx="4" ry="5" fill="'+on('poslS')+'" opacity="'+o('poslS')+'"/>'+
+  '<ellipse cx="144" cy="97" rx="6" ry="11" fill="'+on('dwug')+'" opacity="'+o('dwug')+'"/>'+
+  '<ellipse cx="156" cy="97" rx="6" ry="11" fill="'+on('dwug')+'" opacity="'+o('dwug')+'"/>'+
+  '<ellipse cx="144" cy="115" rx="4" ry="8" fill="'+on('lydki')+'" opacity="'+o('lydki')+'"/>'+
+  '<ellipse cx="156" cy="115" rx="4" ry="8" fill="'+on('lydki')+'" opacity="'+o('lydki')+'"/>'+
+  '</svg>';
 }
 
 function sessHTML(){
@@ -271,11 +382,99 @@ function sessHTML(){
       '<div class="rest">przerwa: <b>'+(ex.pair?('0\u201330 s w parze, '+ex.rest+' po parze'):ex.rest)+'</b></div></div>'+
       '<div class="tgt"><div class="s">'+(isT&&ex.tw?ex.tw+' kg':ns+'\u00d7')+'</div>'+
       '<div class="r">'+(isT&&ex.tw?'potem '+ex.tw2+' kg':ex.r+' powt.')+'</div></div></div>'+
-      '<div class="info">'+(ex.w?'<div class="lead">'+ex.w+'</div>':'')+
+      '<div class="info">'+sylwetka(MM[ex.n]||[])+(ex.w?'<div class="lead">'+ex.w+'</div>':'')+
       '<div class="warm">'+(ex.warm?'<b>Rozgrzewka 12-8-4:</b> 12 powt. ~50% ci\u0119\u017caru roboczego \u2192 8 powt. ~70% \u2192 4 powt. ~85%. Serii rozgrzewkowych nie zapisujesz.':'Rozgrzewka: 1 lekka seria wystarczy.')+'</div></div>'+
       '<div class="sets"><div class="lbl"><span></span><span>ci\u0119\u017car</span><span>powt.</span></div>'+rows+prev+'</div></div>';
   }).join('');
 }
+
+
+/* ---- baza produktów: [W, B, T] na 100 g / 100 ml ---- */
+const FOOD={
+ 'Węglowodany':[
+  ['Płatki owsiane',60,13,7],['Ryż brązowy (suchy)',72,7.5,2.5],['Quinoa (sucha)',64,14,6],
+  ['Kasza gryczana (sucha)',68,12,3],['Chleb żytni',48,6,1.5]],
+ 'Strączki (suche)':[
+  ['Fasola czarna / kidney',47,21,1.5],['Fasola biała Jaś',44,21,1.5],['Soczewica zielona',52,25,1.5],
+  ['Fasola mung',46,24,1.2],['Fasola adzuki',57,20,0.5]],
+ 'Białko':[
+  ['Pierś z kurczaka / indyka',0,23.5,1.25],['Łosoś świeży',0,20,13],['Łosoś wędzony',0,20,12],
+  ['Tofu',2,12,7],['Skyr naturalny',4,11,0.2],['Twaróg chudy',3.5,19,0.5],
+  ['Serek wiejski lekki',3,12,2],['Odżywka białkowa',5,80,4],['Jajko całe (szt. 55 g)',0.35,6.9,5.8],
+  ['Białko jaja (szt. 33 g)',0.23,3.6,0.07],['Mleko sojowe',1,3,1.8]],
+ 'Tłuszcze':[
+  ['Oliwa',0,0,100],['Orzechy włoskie',7,15,65],['Orzechy pekan',4,9,72],
+  ['Orzechy brazylijskie',4,14,66],['Migdały',9,21,50],['Gorzka czekolada 85%',14,10,46],
+  ['Siemię lniane mielone',2,18,42],['Nasiona chia',8,17,31],['Awokado',2,2,15],['Masło orzechowe',12,25,50]],
+ 'Owoce':[
+  ['Banan',20,1.1,0.3],['Borówki',12,0.7,0.3],['Gruszka',12,0.4,0.1],
+  ['Maliny',5,1.2,0.7],['Truskawki',6,0.7,0.4]],
+ 'Warzywa':[
+  ['Warzywa (uśrednione)',4,1.5,0.2],['Marchewka',7,0.9,0.2],['Burak',9,1.6,0.1]]
+};
+/* cele posiłków: [W,B,T] */
+const CELE={
+ 'T|Śniadanie (owsianka)':[95,45,30],'T|Szejk potreningowy':[45,25,15],
+ 'T|Posiłek przedtreningowy':[75,35,30],'T|Posiłek potreningowy':[80,35,15],'T|Kolacja':[40,35,30],
+ 'N|Śniadanie (owsianka)':[68,40,32],'N|Lunch':[55,35,30],'N|Obiad':[55,35,30],'N|Kolacja':[35,35,30]};
+let kalk={dzien:'T',posilek:'T|Śniadanie (owsianka)',skl:[]};
+
+function kalkHTML(){
+  const cel=CELE[kalk.posilek]||[0,0,0];
+  let sum=[0,0,0];
+  kalk.skl.forEach(x=>{ for(let k=0;k<3;k++) sum[k]+=x.v[k]*x.g/100; });
+  const naz=['W','B','T'];
+  const opcje=Object.keys(CELE).filter(k=>k.startsWith(kalk.dzien+'|'))
+    .map(k=>'<option value="'+k+'"'+(k===kalk.posilek?' selected':'')+'>'+k.split('|')[1]+'</option>').join('');
+  let grupy='';
+  for(const g in FOOD){
+    grupy+='<optgroup label="'+g+'">'+FOOD[g].map(f=>
+      '<option value="'+g+'|'+f[0]+'">'+f[0]+'</option>').join('')+'</optgroup>';
+  }
+  let lista=kalk.skl.map((x,i)=>
+    '<div class="row" style="grid-template-columns:1fr 62px 30px">'+
+    '<span style="font-size:12px">'+x.n+'</span>'+
+    '<input inputmode="decimal" value="'+x.g+'" oninput="kalkG('+i+',this.value)">'+
+    '<div class="chk" onclick="kalkDel('+i+')" style="color:var(--red)">\u2715</div></div>').join('');
+  let bilans='';
+  for(let k=0;k<3;k++){
+    const r=cel[k]-sum[k];
+    const kol = Math.abs(r)<=3?'var(--ok)':(r<0?'var(--red)':'var(--soft)');
+    bilans+='<div style="text-align:center"><div style="font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.08em">'+naz[k]+'</div>'+
+      '<div style="font-family:Barlow Condensed;font-size:21px;font-weight:700">'+sum[k].toFixed(0)+'<span style="font-size:13px;color:var(--soft)">/'+cel[k]+'</span></div>'+
+      '<div style="font-size:11px;color:'+kol+'">'+(r>=0?'brakuje '+r.toFixed(0):'ponad '+(-r).toFixed(0))+'</div></div>';
+  }
+  const kcal=sum[0]*4+sum[1]*4+sum[2]*9, kcalCel=cel[0]*4+cel[1]*4+cel[2]*9;
+  return '<div class="banner"><b>Kalkulator posiłku.</b> Wybierz posiłek, dodawaj produkty i patrz, czego brakuje do celu. Zielone = trafione w granicach 3 g.</div>'+
+   '<div class="ex"><div class="sets" style="padding-top:11px">'+
+   '<div class="row" style="grid-template-columns:1fr 1fr">'+
+   '<select onchange="kalkDzien(this.value)" style="padding:9px;border-radius:9px;background:var(--card2);color:var(--ink);border:1px solid var(--line);font-size:13px">'+
+   '<option value="T"'+(kalk.dzien==='T'?' selected':'')+'>Dzień treningowy</option>'+
+   '<option value="N"'+(kalk.dzien==='N'?' selected':'')+'>Nietreningowy</option></select>'+
+   '<select onchange="kalkPos(this.value)" style="padding:9px;border-radius:9px;background:var(--card2);color:var(--ink);border:1px solid var(--line);font-size:13px">'+opcje+'</select></div>'+
+   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">'+bilans+'</div>'+
+   '<div style="text-align:center;font-size:12px;color:var(--soft);margin-bottom:10px">'+kcal.toFixed(0)+' / '+kcalCel+' kcal</div>'+
+   lista+
+   '<div class="row" style="grid-template-columns:1fr 62px 30px;margin-top:8px">'+
+   '<select id="ksel" style="padding:9px;border-radius:9px;background:var(--card2);color:var(--ink);border:1px solid var(--line);font-size:12px">'+grupy+'</select>'+
+   '<input id="kg" inputmode="decimal" placeholder="g">'+
+   '<div class="chk on" onclick="kalkAdd()">+</div></div>'+
+   (kalk.skl.length?'<div class="prev" style="padding-top:9px"><span onclick="kalkClear()" style="color:var(--red);cursor:pointer">wyczyść wszystko</span></div>':'')+
+   '</div></div>';
+}
+function kalkDzien(v){ kalk.dzien=v; kalk.posilek=Object.keys(CELE).find(k=>k.startsWith(v+'|')); render(); }
+function kalkPos(v){ kalk.posilek=v; render(); }
+function kalkAdd(){
+  const sel=document.getElementById('ksel').value, g=parseFloat(document.getElementById('kg').value);
+  if(!g||g<=0) return;
+  const [grupa,nazwa]=sel.split('|');
+  const f=FOOD[grupa].find(x=>x[0]===nazwa); if(!f) return;
+  kalk.skl.push({n:nazwa,g:g,v:[f[1],f[2],f[3]]});
+  S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render();
+}
+function kalkG(i,v){ kalk.skl[i].g=parseFloat(v)||0; S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render(); }
+function kalkDel(i){ kalk.skl.splice(i,1); S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render(); }
+function kalkClear(){ kalk.skl=[]; S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render(); }
 
 function wagaHTML(){
   const w=waga||{};
@@ -324,14 +523,41 @@ function exp(){const s=JSON.stringify(log);
 function doImp(){try{log=JSON.parse(document.getElementById('ta').value);save();render();pill('wczytano','ok');}
   catch(e){pill('B\u0141\u0104D','err');}}
 
-let tm=null,left=0;
-function T(s){left=s;clearInterval(tm);
-  document.getElementById('td').className='t'+(s>0?' run':'');
-  if(s>0)tm=setInterval(()=>{left--;dr();if(left<=0){clearInterval(tm);
-    document.getElementById('td').className='t';if(navigator.vibrate)navigator.vibrate([200,100,200]);}},1000);
-  dr();}
-function dr(){const m=Math.floor(Math.max(0,left)/60),s=Math.max(0,left)%60;
-  document.getElementById('td').textContent=m+':'+String(s).padStart(2,'0');}
+let tm=null,koniec=0,zagrano=false,ac=null;
+function dzwon(){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended') ac.resume();
+    [0,0.35,0.7].forEach(t=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.frequency.value=880; o.type='sine';
+      g.gain.setValueAtTime(0.001,ac.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(0.4,ac.currentTime+t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+t+0.28);
+      o.start(ac.currentTime+t); o.stop(ac.currentTime+t+0.3);
+    });
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([300,120,300,120,300]);
+}
+function T(s){
+  try{ ac=ac||new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended')ac.resume(); }catch(e){}
+  clearInterval(tm); zagrano=false;
+  koniec = s>0 ? Date.now()+s*1000 : 0;
+  try{ S.set('rp_timer',String(koniec)); }catch(e){}
+  if(s>0) tm=setInterval(dr,250);
+  dr();
+}
+function dr(){
+  const left = koniec ? Math.round((koniec-Date.now())/1000) : 0;
+  const el=document.getElementById('td');
+  el.className='t'+(left>0?' run':'');
+  const v=Math.max(0,left);
+  el.textContent=Math.floor(v/60)+':'+String(v%60).padStart(2,'0');
+  if(koniec && left<=0 && !zagrano){ zagrano=true; clearInterval(tm); dzwon(); koniec=0;
+    try{ S.set('rp_timer','0'); }catch(e){} }
+}
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) dr(); });
 
 (async function(){
   await S.init();
