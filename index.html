@@ -126,7 +126,7 @@ const PLAN={
     { n: "Wypychanie bioder ze sztangą", m: "Pośladkowy wielki", s: [4,5,5,6], r: "8–12", p: 1, rest: "2–3 min", pair: 0, tw: "70", tw2: "56", w: "Obunóż — limitem ma być pośladek, nie stabilizacja." },
     { n: "Martwy ciąg rumuński", m: "Dwugłowe uda · pośladki", s: [3,3,3,3], r: "8–12", rest: "2–3 min", pair: 2, tw: "110", tw2: "88" },
     { n: "Wspięcia na łydki stojąc", m: "Brzuchaty łydki", s: [3,3,4,4], r: "10–15", rest: "60–90 s", pair: 2, tw: "70", tw2: "56", w: "Kolano proste = brzuchaty." },
-    { n: "Uginanie podudzi leżąc", m: "Dwugłowe uda", s: [3,3,3,3], r: "10–15", rest: "90–120 s", pair: 3, tw: "20", tw2: "16" },
+    { n: "Uginanie podudzi leżąc", m: "Dwugłowe uda — obunóż", s: [3,3,3,3], r: "10–15", rest: "90–120 s", pair: 3, tw: "40", tw2: "32", w: "Obunóż. Ciężar z Twojego tygodnia testowego, nie z szacunku." },
     { n: "Przyciąganie kolan w zwisie", m: "Brzuch dolny", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 3, tw: null, tw2: null },
   ],
   C: [
@@ -351,6 +351,169 @@ function sylwetka(akt){
   '</svg>';
 }
 
+
+/* ================= ANATOMIA: widoki szczegółowe ================= */
+const AKT='#3B82F6', NIE='#3A424F';
+function f(a,k){return a.indexOf(k)>=0?AKT:NIE;}
+function op(a,k){return a.indexOf(k)>=0?'.95':'.4';}
+
+const REG={
+plecy:{t:'Plecy — widok od tyłu',
+ m:[['kaptG','Czworoboczny górny','kark i góra barków'],
+    ['kaptS','Czworoboczny środkowy','między łopatkami — grubość pleców'],
+    ['romb','Równoległoboczne','pod łopatkami, ściągają je do siebie'],
+    ['najsz','Najszerszy grzbietu','od pachy do talii — szerokość, litera V'],
+    ['prost','Prostownik grzbietu','wzdłuż kręgosłupa'],
+    ['barkT','Bark tylny','tył stawu barkowego']],
+ svg:a=>'<svg viewBox="0 0 200 240" style="width:100%;max-width:215px;display:block;margin:4px auto">'+
+  /* kontur tułowia */
+  '<path d="M100 18 q14 0 16 12 l0 8 q26 6 34 20 q8 14 6 40 q-2 30 -8 52 q-4 18 -6 44 q-1 20 -4 34 l-76 0 q-3 -14 -4 -34 q-2 -26 -6 -44 q-6 -22 -8 -52 q-2 -26 6 -40 q8 -14 34 -20 l0 -8 q2 -12 16 -12 z" fill="#242C38" stroke="#3A424F" stroke-width="1.5"/>'+
+  /* czworoboczny górny */
+  '<path d="M72 40 q28 -8 56 0 l10 26 q-38 -8 -76 0 z" fill="'+f(a,'kaptG')+'" opacity="'+op(a,'kaptG')+'"/>'+
+  /* bark tylny */
+  '<ellipse cx="48" cy="62" rx="14" ry="15" fill="'+f(a,'barkT')+'" opacity="'+op(a,'barkT')+'"/>'+
+  '<ellipse cx="152" cy="62" rx="14" ry="15" fill="'+f(a,'barkT')+'" opacity="'+op(a,'barkT')+'"/>'+
+  /* czworoboczny środkowy */
+  '<path d="M64 68 l72 0 l-8 30 l-56 0 z" fill="'+f(a,'kaptS')+'" opacity="'+op(a,'kaptS')+'"/>'+
+  /* romboidy */
+  '<path d="M76 84 l48 0 l-5 20 l-38 0 z" fill="'+f(a,'romb')+'" opacity="'+op(a,'romb')+'"/>'+
+  /* najszerszy */
+  '<path d="M62 96 q-14 34 4 74 q10 12 28 8 l0 -80 z" fill="'+f(a,'najsz')+'" opacity="'+op(a,'najsz')+'"/>'+
+  '<path d="M138 96 q14 34 -4 74 q-10 12 -28 8 l0 -80 z" fill="'+f(a,'najsz')+'" opacity="'+op(a,'najsz')+'"/>'+
+  /* prostownik */
+  '<rect x="92" y="100" width="6.5" height="76" rx="3" fill="'+f(a,'prost')+'" opacity="'+op(a,'prost')+'"/>'+
+  '<rect x="101.5" y="100" width="6.5" height="76" rx="3" fill="'+f(a,'prost')+'" opacity="'+op(a,'prost')+'"/>'+
+  '</svg>'},
+klatka:{t:'Klatka — widok z przodu',
+ m:[['obojcz','Część obojczykowa','góra klatki — najsłabsza u Ciebie'],
+    ['most','Część mostkowa','środek i dół klatki'],
+    ['barkP','Bark przedni','przód stawu barkowego']],
+ svg:a=>'<svg viewBox="0 0 200 170" style="width:100%;max-width:230px;display:block;margin:4px auto">'+
+  '<ellipse cx="46" cy="52" rx="16" ry="13" fill="'+f(a,'barkP')+'" opacity="'+op(a,'barkP')+'"/>'+
+  '<ellipse cx="154" cy="52" rx="16" ry="13" fill="'+f(a,'barkP')+'" opacity="'+op(a,'barkP')+'"/>'+
+  '<path d="M62 44 L98 44 L98 72 L60 68 Z" fill="'+f(a,'obojcz')+'" opacity="'+op(a,'obojcz')+'"/>'+
+  '<path d="M102 44 L138 44 L140 68 L102 72 Z" fill="'+f(a,'obojcz')+'" opacity="'+op(a,'obojcz')+'"/>'+
+  '<path d="M60 70 L98 74 L98 116 Q74 114 62 100 Z" fill="'+f(a,'most')+'" opacity="'+op(a,'most')+'"/>'+
+  '<path d="M140 70 L102 74 L102 116 Q126 114 138 100 Z" fill="'+f(a,'most')+'" opacity="'+op(a,'most')+'"/>'+
+  '<rect x="86" y="120" width="28" height="40" rx="4" fill="#2A313C" opacity=".5"/>'+
+  '</svg>'},
+bark:{t:'Bark — trzy aktony',
+ m:[['barkP','Akton przedni','pracuje w każdym wyciskaniu'],
+    ['barkB','Akton boczny','szerokość sylwetki — wznosy bokiem'],
+    ['barkT','Akton tylny','wymaga pracy bezpośredniej']],
+ svg:a=>'<svg viewBox="0 0 200 150" style="width:100%;max-width:210px;display:block;margin:4px auto">'+
+  '<ellipse cx="100" cy="80" rx="52" ry="46" fill="#2A313C" opacity=".35"/>'+
+  '<path d="M100 34 Q56 40 54 78 L100 80 Z" fill="'+f(a,'barkP')+'" opacity="'+op(a,'barkP')+'"/>'+
+  '<path d="M54 78 Q52 118 100 126 L100 80 Z" fill="'+f(a,'barkB')+'" opacity="'+op(a,'barkB')+'"/>'+
+  '<path d="M100 34 Q146 40 148 90 Q140 122 100 126 L100 80 Z" fill="'+f(a,'barkT')+'" opacity="'+op(a,'barkT')+'"/>'+
+  '</svg>'},
+ramie:{t:'Ramię',
+ m:[['biceps','Biceps','zgina łokieć i obraca dłoń'],
+    ['tricepsD','Triceps — głowa długa','tylko przy ramieniu nad głową'],
+    ['tricepsB','Triceps — głowa boczna','pushdowny'],
+    ['przedr','Ramienno-promieniowy','przedramię od strony kciuka']],
+ svg:a=>'<svg viewBox="0 0 200 170" style="width:100%;max-width:200px;display:block;margin:4px auto">'+
+  '<ellipse cx="66" cy="60" rx="20" ry="34" fill="'+f(a,'biceps')+'" opacity="'+op(a,'biceps')+'"/>'+
+  '<ellipse cx="134" cy="52" rx="15" ry="30" fill="'+f(a,'tricepsD')+'" opacity="'+op(a,'tricepsD')+'"/>'+
+  '<ellipse cx="152" cy="70" rx="12" ry="24" fill="'+f(a,'tricepsB')+'" opacity="'+op(a,'tricepsB')+'"/>'+
+  '<ellipse cx="72" cy="122" rx="14" ry="30" fill="'+f(a,'przedr')+'" opacity="'+op(a,'przedr')+'"/>'+
+  '<text x="66" y="16" fill="#64748B" font-size="9" text-anchor="middle" font-family="sans-serif">PRZÓD</text>'+
+  '<text x="142" y="16" fill="#64748B" font-size="9" text-anchor="middle" font-family="sans-serif">TYŁ</text>'+
+  '</svg>'},
+udoP:{t:'Udo — przód',
+ m:[['prosty','Prosty uda','środek, jedyna głowa przez biodro'],
+    ['bocz','Obszerny boczny','zewnętrzna strona uda'],
+    ['przysr','Obszerny przyśrodkowy','kropla nad kolanem']],
+ svg:a=>'<svg viewBox="0 0 200 200" style="width:100%;max-width:180px;display:block;margin:4px auto">'+
+  '<path d="M56 22 q44 -8 88 0 q8 40 0 78 q-6 40 -14 82 l-60 0 q-8 -42 -14 -82 q-8 -38 0 -78 z" fill="#242C38" stroke="#3A424F" stroke-width="1.5"/>'+
+  '<ellipse cx="100" cy="86" rx="17" ry="66" fill="'+f(a,'prosty')+'" opacity="'+op(a,'prosty')+'"/>'+
+  '<path d="M66 40 Q54 100 70 148 L86 140 L86 44 Z" fill="'+f(a,'bocz')+'" opacity="'+op(a,'bocz')+'"/>'+
+  '<path d="M134 46 Q146 106 126 150 L114 142 L114 50 Z" fill="'+f(a,'przysr')+'" opacity="'+op(a,'przysr')+'"/>'+
+  '</svg>'},
+udoT:{t:'Udo i pośladek — tył',
+ m:[['poslW','Pośladkowy wielki','główny prostownik biodra'],
+    ['poslS','Pośladkowy średni','bok biodra — szerokość'],
+    ['dwug','Dwugłowy uda','tył uda, zgina kolano']],
+ svg:a=>'<svg viewBox="0 0 200 210" style="width:100%;max-width:190px;display:block;margin:4px auto">'+
+  '<ellipse cx="72" cy="44" rx="24" ry="20" fill="'+f(a,'poslS')+'" opacity="'+op(a,'poslS')+'"/>'+
+  '<ellipse cx="128" cy="44" rx="24" ry="20" fill="'+f(a,'poslS')+'" opacity="'+op(a,'poslS')+'"/>'+
+  '<ellipse cx="78" cy="66" rx="30" ry="27" fill="'+f(a,'poslW')+'" opacity="'+op(a,'poslW')+'"/>'+
+  '<ellipse cx="122" cy="66" rx="30" ry="27" fill="'+f(a,'poslW')+'" opacity="'+op(a,'poslW')+'"/>'+
+  '<ellipse cx="80" cy="140" rx="22" ry="52" fill="'+f(a,'dwug')+'" opacity="'+op(a,'dwug')+'"/>'+
+  '<ellipse cx="120" cy="140" rx="22" ry="52" fill="'+f(a,'dwug')+'" opacity="'+op(a,'dwug')+'"/>'+
+  '</svg>'},
+lydka:{t:'Łydka',
+ m:[['brzuchaty','Brzuchaty łydki','pracuje przy prostym kolanie'],
+    ['plaszcz','Płaszczkowaty','pracuje przy zgiętym kolanie']],
+ svg:a=>'<svg viewBox="0 0 200 180" style="width:100%;max-width:160px;display:block;margin:4px auto">'+
+  '<ellipse cx="100" cy="104" rx="34" ry="66" fill="'+f(a,'plaszcz')+'" opacity="'+op(a,'plaszcz')+'"/>'+
+  '<ellipse cx="82" cy="72" rx="19" ry="40" fill="'+f(a,'brzuchaty')+'" opacity="'+op(a,'brzuchaty')+'"/>'+
+  '<ellipse cx="118" cy="72" rx="19" ry="40" fill="'+f(a,'brzuchaty')+'" opacity="'+op(a,'brzuchaty')+'"/>'+
+  '</svg>'},
+brzuch:{t:'Brzuch',
+ m:[['prostyB','Prosty brzucha','przednia ściana'],
+    ['skosne','Skośne','boki tułowia']],
+ svg:a=>'<svg viewBox="0 0 200 180" style="width:100%;max-width:180px;display:block;margin:4px auto">'+
+  '<path d="M60 30 Q54 90 66 150 L84 150 L84 30 Z" fill="'+f(a,'skosne')+'" opacity="'+op(a,'skosne')+'"/>'+
+  '<path d="M140 30 Q146 90 134 150 L116 150 L116 30 Z" fill="'+f(a,'skosne')+'" opacity="'+op(a,'skosne')+'"/>'+
+  '<rect x="86" y="30" width="28" height="120" rx="6" fill="'+f(a,'prostyB')+'" opacity="'+op(a,'prostyB')+'"/>'+
+  '<line x1="86" y1="60" x2="114" y2="60" stroke="#0F172A" stroke-width="2"/>'+
+  '<line x1="86" y1="90" x2="114" y2="90" stroke="#0F172A" stroke-width="2"/>'+
+  '<line x1="86" y1="120" x2="114" y2="120" stroke="#0F172A" stroke-width="2"/>'+
+  '<line x1="100" y1="30" x2="100" y2="150" stroke="#0F172A" stroke-width="2"/>'+
+  '</svg>'}
+};
+
+/* ćwiczenie -> [ [region, aktywne] ] */
+const EXA={
+'Wyciskanie sztangi poziomo':[['klatka',['most','barkP']],['ramie',['tricepsB']]],
+'Wyciskanie hantli skośne 30°':[['klatka',['obojcz','barkP']]],
+'Wiosłowanie sztangą w opadzie':[['plecy',['kaptS','romb','najsz']]],
+'Ściąganie uchwytu z góry jednorącz':[['plecy',['najsz']]],
+'Prostowanie ramion zza głowy':[['ramie',['tricepsD']]],
+'Scarecrows':[['plecy',['barkT','kaptS']],['bark',['barkT']]],
+'Uginanie przedramion sztangą prostą':[['ramie',['biceps']]],
+'Wznosy bokiem na wyciągu':[['bark',['barkB']]],
+'Przysiad ze sztangą na barkach':[['udoP',['prosty','bocz','przysr']],['udoT',['poslW']]],
+'Wypychanie bioder ze sztangą':[['udoT',['poslW']]],
+'Martwy ciąg rumuński':[['udoT',['dwug','poslW']],['plecy',['prost']]],
+'Wspięcia na łydki stojąc':[['lydka',['brzuchaty']]],
+'Uginanie podudzi leżąc':[['udoT',['dwug']]],
+'Przyciąganie kolan w zwisie':[['brzuch',['prostyB']]],
+'Pompki na poręczach z obciążeniem':[['klatka',['most']],['ramie',['tricepsB','tricepsD']]],
+'Wyciskanie hantli poziomo':[['klatka',['most','barkP']]],
+'Podciąganie nachwytem':[['plecy',['najsz']],['ramie',['biceps']]],
+'Rozpiętki na bramie':[['klatka',['most','obojcz']]],
+'Wiosłowanie hantlem jednorącz':[['plecy',['najsz','kaptS','romb']]],
+'Prostowanie ramion na wyciągu':[['ramie',['tricepsB']]],
+'Wznosy bokiem z hantlami':[['bark',['barkB']]],
+'Zottman curl':[['ramie',['biceps','przedr']]],
+'Martwy ciąg staggered / trap bar':[['udoT',['dwug','poslW']],['plecy',['prost','kaptS']]],
+'Wykroki do tyłu z podwyższenia':[['udoP',['prosty','bocz','przysr']],['udoT',['poslW']]],
+'Wspięcia na łydki siedząc':[['lydka',['plaszcz']]],
+'Odwodzenie w biodrze (maszyna)':[['udoT',['poslS']]],
+'Wyciskanie nóg na suwnicy':[['udoP',['prosty','bocz','przysr']]],
+'Prostowanie podudzi siedząc':[['udoP',['prosty','bocz','przysr']]],
+'Spięcia brzucha na piłce':[['brzuch',['prostyB']]]
+};
+
+function anatomia(nazwa){
+  const lista=EXA[nazwa]; if(!lista) return '';
+  return lista.map(function(p){
+    const R=REG[p[0]], akt=p[1]; if(!R) return '';
+    const opisy=R.m.map(function(m){
+      const on=akt.indexOf(m[0])>=0;
+      return '<div style="display:flex;gap:7px;align-items:flex-start;padding:2.5px 0;'+(on?'':'opacity:.45')+'">'+
+        '<span style="flex:0 0 9px;height:9px;border-radius:2px;margin-top:4px;background:'+(on?AKT:NIE)+'"></span>'+
+        '<span style="font-size:11.5px;line-height:1.35"><b style="color:'+(on?'#F1F5F9':'#94A3B8')+'">'+m[1]+'</b>'+
+        '<span style="display:block;color:#64748B;font-size:10.5px">'+m[2]+'</span></span></div>';
+    }).join('');
+    return '<div style="background:rgba(15,23,42,.5);border-radius:9px;padding:8px 10px;margin-bottom:8px">'+
+      '<div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#64748B;margin-bottom:3px">'+R.t+'</div>'+
+      R.svg(akt)+'<div style="margin-top:6px">'+opisy+'</div></div>';
+  }).join('');
+}
+
 function sessHTML(){
   const w=WEEKS.find(x=>x.id===W); let b='';
   if(w.type==='test') b='<div class="banner test"><b>Tydzie\u0144 testowy.</b> Seria <b>T</b> \u2014 ci\u0119\u017car submaksymalny, dojd\u017a blisko 1 RIR. Potem zdejmij 20% (<b>\u221220</b>) i reszt\u0119 r\u00f3b na maksa. Liczby to propozycje z Twojej historii \u2014 nadpisz, je\u015bli wyjdzie inaczej.<br><br><b>Na tydzie\u0144 1:</b> ten sam ci\u0119\u017car co w serii T, ale zatrzymuj si\u0119 3\u20134 powt\u00f3rzenia wcze\u015bniej.</div>';
@@ -382,7 +545,7 @@ function sessHTML(){
       '<div class="rest">przerwa: <b>'+(ex.pair?('0\u201330 s w parze, '+ex.rest+' po parze'):ex.rest)+'</b></div></div>'+
       '<div class="tgt"><div class="s">'+(isT&&ex.tw?ex.tw+' kg':ns+'\u00d7')+'</div>'+
       '<div class="r">'+(isT&&ex.tw?'potem '+ex.tw2+' kg':ex.r+' powt.')+'</div></div></div>'+
-      '<div class="info">'+sylwetka(MM[ex.n]||[])+(ex.w?'<div class="lead">'+ex.w+'</div>':'')+
+      '<div class="info">'+anatomia(ex.n)+(ex.w?'<div class="lead">'+ex.w+'</div>':'')+
       '<div class="warm">'+(ex.warm?'<b>Rozgrzewka 12-8-4:</b> 12 powt. ~50% ci\u0119\u017caru roboczego \u2192 8 powt. ~70% \u2192 4 powt. ~85%. Serii rozgrzewkowych nie zapisujesz.':'Rozgrzewka: 1 lekka seria wystarczy.')+'</div></div>'+
       '<div class="sets"><div class="lbl"><span></span><span>ci\u0119\u017car</span><span>powt.</span></div>'+rows+prev+'</div></div>';
   }).join('');
