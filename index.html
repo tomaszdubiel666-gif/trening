@@ -504,20 +504,33 @@ const EXA={
 
 function obrazki(dz,i,nazwa){
   const baza=dz+String(i+1).padStart(2,'0');
-  const opisy=anatomia(nazwa);
   const idf='ph_'+baza;
-  return '<div id="'+idf+'">'+
-    '<img src="'+baza+'.png" style="width:100%;border-radius:9px;display:block;margin-bottom:6px" '+
-      'onerror="brakObrazka(\''+idf+'\')">'+
-    '<img src="'+baza+'-b.png" style="width:100%;border-radius:9px;display:block;margin-bottom:6px" '+
-      'onerror="this.style.display=\'none\'">'+
-    '<img src="'+baza+'-c.png" style="width:100%;border-radius:9px;display:block;margin-bottom:6px" '+
-      'onerror="this.style.display=\'none\'">'+
-    '</div>'+opisy;
+  let im='';
+  ['','-b','-c'].forEach(function(suf){
+    const id=idf+suf.replace('-','_');
+    im+='<img id="'+id+'" data-src="'+baza+suf+'.png" '+
+        'style="width:100%;border-radius:9px;display:block;margin-bottom:6px" '+
+        'data-baza="'+baza+suf+'" data-krok="0" onerror="nastepny(this)">';
+  });
+  return '<div id="'+idf+'">'+im+'</div>'+anatomia(nazwa);
 }
-function brakObrazka(id){
-  const el=document.getElementById(id);
-  if(el) el.style.display='none';   /* brak pliku -> zostaje sam rysunek SVG z opisami */
+/* próbuje po kolei: .png -> .jpg -> .jpeg -> ukryj */
+function rozwin(el){
+  const inf=el.parentNode.querySelector('.info');
+  inf.classList.toggle('on');
+  if(inf.classList.contains('on')){
+    inf.querySelectorAll('img[data-src]').forEach(function(im){
+      im.src=im.getAttribute('data-src'); im.removeAttribute('data-src');
+    });
+  }
+}
+function nastepny(el){
+  const b=el.getAttribute('data-baza');
+  let k=parseInt(el.getAttribute('data-krok'))+1;
+  el.setAttribute('data-krok',k);
+  if(k===1){ el.src=b+'.jpg'; return; }
+  if(k===2){ el.src=b+'.jpeg'; return; }
+  el.style.display='none';
 }
 function anatomia(nazwa){
   const lista=EXA[nazwa]; if(!lista) return '';
@@ -561,7 +574,7 @@ function sessHTML(){
         if(t) prev='<div class="prev">poprzedni tydzie\u0144: <b>'+t+'</b></div>';}
     }
     return '<div class="ex '+(ex.p?'prio':'')+'">'+
-      '<div class="exh" onclick="this.parentNode.querySelector(\'.info\').classList.toggle(\'on\')">'+
+      '<div class="exh" onclick="rozwin(this)">'+
       '<div><h3>'+ex.n+'</h3><div class="m">'+ex.m+(ex.p?' \u00b7 priorytet':'')+'</div>'+
       '<span class="badge '+(ex.pair?PC[ex.pair]:'b0')+'">'+(ex.pair?('superseria '+D+ex.pair):'solo')+'</span>'+
       '<div class="rest">przerwa: <b>'+(ex.pair?('0\u201330 s w parze, '+ex.rest+' po parze'):ex.rest)+'</b></div></div>'+
