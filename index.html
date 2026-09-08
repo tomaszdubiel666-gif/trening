@@ -222,8 +222,13 @@ async function pobierzZArkusza(){
       if(!log[id][j2].kg){ log[id][j2].kg=String(row.ciezar); log[id][j2].rp=String(row.powt); n++; }
     });
     if(j.waga&&j.waga.length){
-      const ost=j.waga[j.waga.length-1];
-      if(!waga.waga){ waga={waga:String(ost.waga),pas:String(ost.pas||'')}; }
+      waga.d=waga.d||{}; waga.p=waga.p||{};
+      j.waga.forEach(function(x){
+        const dt=String(x.data||'').slice(0,10);
+        if(!dt) return;
+        if(x.waga && !waga.d[dt]) waga.d[dt]=String(x.waga);
+        if(x.pas  && !waga.p[dt]) waga.p[dt]=String(x.pas);
+      });
     }
     await S.set('rp_log',JSON.stringify(log));
     await S.set('rp_waga',JSON.stringify(waga));
@@ -497,6 +502,23 @@ const EXA={
 'Spięcia brzucha na piłce':[['brzuch',['prostyB']]]
 };
 
+function obrazki(dz,i,nazwa){
+  const baza=dz+String(i+1).padStart(2,'0');
+  const opisy=anatomia(nazwa);
+  const idf='ph_'+baza;
+  return '<div id="'+idf+'">'+
+    '<img src="'+baza+'.png" style="width:100%;border-radius:9px;display:block;margin-bottom:6px" '+
+      'onerror="brakObrazka(\''+idf+'\')">'+
+    '<img src="'+baza+'-b.png" style="width:100%;border-radius:9px;display:block;margin-bottom:6px" '+
+      'onerror="this.style.display=\'none\'">'+
+    '<img src="'+baza+'-c.png" style="width:100%;border-radius:9px;display:block;margin-bottom:6px" '+
+      'onerror="this.style.display=\'none\'">'+
+    '</div>'+opisy;
+}
+function brakObrazka(id){
+  const el=document.getElementById(id);
+  if(el) el.style.display='none';   /* brak pliku -> zostaje sam rysunek SVG z opisami */
+}
 function anatomia(nazwa){
   const lista=EXA[nazwa]; if(!lista) return '';
   return lista.map(function(p){
@@ -545,7 +567,7 @@ function sessHTML(){
       '<div class="rest">przerwa: <b>'+(ex.pair?('0\u201330 s w parze, '+ex.rest+' po parze'):ex.rest)+'</b></div></div>'+
       '<div class="tgt"><div class="s">'+(isT&&ex.tw?ex.tw+' kg':ns+'\u00d7')+'</div>'+
       '<div class="r">'+(isT&&ex.tw?'potem '+ex.tw2+' kg':ex.r+' powt.')+'</div></div></div>'+
-      '<div class="info">'+anatomia(ex.n)+(ex.w?'<div class="lead">'+ex.w+'</div>':'')+
+      '<div class="info">'+obrazki(D,i,ex.n)+(ex.w?'<div class="lead">'+ex.w+'</div>':'')+
       '<div class="warm">'+(ex.warm?'<b>Rozgrzewka 12-8-4:</b> 12 powt. ~50% ci\u0119\u017caru roboczego \u2192 8 powt. ~70% \u2192 4 powt. ~85%. Serii rozgrzewkowych nie zapisujesz.':'Rozgrzewka: 1 lekka seria wystarczy.')+'</div></div>'+
       '<div class="sets"><div class="lbl"><span></span><span>ci\u0119\u017car</span><span>powt.</span></div>'+rows+prev+'</div></div>';
   }).join('');
@@ -640,22 +662,73 @@ function kalkDel(i){ kalk.skl.splice(i,1); S.set('rp_kalk',JSON.stringify(kalk))
 function kalkClear(){ kalk.skl=[]; S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render(); }
 
 function wagaHTML(){
-  const w=waga||{};
-  return '<div class="banner"><b>Pomiar masy.</b> 1\u20132\u00d7 w tygodniu, rano na czczo, po toalecie. Liczy si\u0119 trend, nie pojedynczy pomiar. Cel: <b>+0,5 kg na 2 tygodnie</b>, stop w okolicy 84\u201385 kg.</div>'+
-  '<div class="ex"><div class="sets" style="padding-top:11px">'+
-  '<div class="lbl"><span></span><span>waga (kg)</span><span>pas (cm)</span></div>'+
-  '<div class="row"><span class="i">'+dzis().slice(5)+'</span>'+
-  '<input inputmode="decimal" placeholder="80,5" value="'+(w.waga||'')+'" oninput="updW(\'waga\',this.value)">'+
-  '<input inputmode="decimal" placeholder="79" value="'+(w.pas||'')+'" oninput="updW(\'pas\',this.value)"></div>'+
-  '<div class="prev">Wpis trafia do arkusza pod dzisiejsz\u0105 dat\u0105. Ponowne wpisanie tego samego dnia nadpisuje.</div>'+
-  '</div></div>'+
-  '<div class="legend">Obw\u00f3d pasa mierz w tym samym miejscu, rano, bez wci\u0105gania brzucha. Je\u015bli przy +2 kg masy pas ur\u00f3s\u0142 o wi\u0119cej ni\u017c 1 cm, tempo jest za szybkie.</div>';
+  const start=waga.start||'';
+  if(!start){
+    return '<div class="banner"><b>Ustaw datę startu.</b> Podaj poniedziałek tygodnia testowego — na tej podstawie aplikacja sama policzy daty wszystkich tygodni i nie będziesz musiał ich wpisywać.</div>'+
+    '<div class="ex"><div class="sets" style="padding-top:12px">'+
+    '<div class="row" style="grid-template-columns:1fr"><input type="date" value="" onchange="ustawStart(this.value)" '+
+    'style="padding:11px;border-radius:9px;background:var(--card2);color:var(--ink);border:1px solid var(--line);font-size:15px"></div>'+
+    '</div></div>';
+  }
+  const w=WEEKS.find(x=>x.id===W)||WEEKS[1];
+  const nrT=['t','1','2','3','4','d'].indexOf(W);
+  const pon=new Date(start+'T12:00:00'); pon.setDate(pon.getDate()+nrT*7);
+  const dni=['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
+  let rows='';
+  for(let k=0;k<7;k++){
+    const d=new Date(pon); d.setDate(pon.getDate()+k);
+    const iso=d.toISOString().slice(0,10);
+    const v=(waga.d&&waga.d[iso])||'';
+    rows+='<div class="row" style="grid-template-columns:42px 1fr 1fr">'+
+      '<span class="i">'+dni[k]+'</span>'+
+      '<span style="font-size:11.5px;color:var(--soft);align-self:center">'+iso.slice(5)+'</span>'+
+      '<input inputmode="decimal" placeholder="kg" value="'+v+'" oninput="updDzien(\''+iso+'\',this.value)"></div>';
+  }
+  const isoPon=pon.toISOString().slice(0,10);
+  const pas=(waga.p&&waga.p[isoPon])||'';
+  const vals=[]; for(let k=0;k<7;k++){const d=new Date(pon);d.setDate(pon.getDate()+k);
+    const q=(waga.d&&waga.d[d.toISOString().slice(0,10)]); if(q) vals.push(parseFloat(q));}
+  const sr=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length):0;
+  return '<div class="banner"><b>'+w.label+'</b> \u2014 tydzie\u0144 od '+isoPon+'. Wa\u017c si\u0119 rano na czczo, po toalecie. '+
+    'Liczy si\u0119 <b>\u015brednia tygodniowa</b>, nie pojedynczy pomiar.</div>'+
+    '<div class="ex"><div class="sets" style="padding-top:11px">'+
+    '<div class="lbl" style="grid-template-columns:42px 1fr 1fr"><span></span><span>data</span><span>waga (kg)</span></div>'+
+    rows+
+    (vals.length?'<div class="prev" style="padding-top:8px">\u015arednia z '+vals.length+' pomiar\u00f3w: <b style="color:var(--acc)">'+sr.toFixed(2)+' kg</b></div>':'')+
+    '</div></div>'+
+    '<div class="ex"><div class="sets" style="padding-top:11px">'+
+    '<div class="lbl" style="grid-template-columns:1fr 1fr"><span>obw\u00f3d pasa \u2014 raz w tygodniu</span><span>cm</span></div>'+
+    '<div class="row" style="grid-template-columns:1fr 1fr">'+
+    '<span style="font-size:11.5px;color:var(--soft);align-self:center">pomiar w '+isoPon.slice(5)+'</span>'+
+    '<input inputmode="decimal" placeholder="79" value="'+pas+'" oninput="updPas(\''+isoPon+'\',this.value)"></div>'+
+    '<div class="prev" style="padding-top:8px">Mierz w tym samym miejscu, rano, bez wci\u0105gania brzucha.</div>'+
+    '</div></div>'+
+    '<div class="legend">Cel: <b style="color:var(--ink)">+0,5 kg na 2 tygodnie</b>. Je\u015bli przy +2 kg masy pas ur\u00f3s\u0142 o wi\u0119cej ni\u017c 1 cm, tempo jest za szybkie. '+
+    'Przełączaj tygodnie paskiem na g\u00f3rze.</div>';
 }
-function updW(f,v){
-  waga[f]=v; try{ S.set('rp_waga',JSON.stringify(waga)); }catch(e){}
-  clearTimeout(updW._t); updW._t=setTimeout(()=>{
-    if(!waga.waga) return;
-    kolejkuj({type:'waga',data:dzis(),waga:waga.waga,pas:waga.pas||'',uwagi:''});
+function ustawStart(v){
+  if(!v) return;
+  const d=new Date(v+'T12:00:00');
+  d.setDate(d.getDate()-((d.getDay()+6)%7));   // cofnij do poniedziałku
+  waga.start=d.toISOString().slice(0,10);
+  S.set('rp_waga',JSON.stringify(waga)).catch(function(){}); render();
+}
+function updDzien(iso,v){
+  waga.d=waga.d||{}; waga.d[iso]=v;
+  S.set('rp_waga',JSON.stringify(waga)).catch(function(){});
+  clearTimeout(updDzien['t'+iso]);
+  updDzien['t'+iso]=setTimeout(function(){
+    if(!v) return;
+    kolejkuj({type:'waga',data:iso,waga:v,pas:(waga.p&&waga.p[iso])||'',uwagi:''});
+  },1500);
+}
+function updPas(iso,v){
+  waga.p=waga.p||{}; waga.p[iso]=v;
+  S.set('rp_waga',JSON.stringify(waga)).catch(function(){});
+  clearTimeout(updPas['t'+iso]);
+  updPas['t'+iso]=setTimeout(function(){
+    if(!v) return;
+    kolejkuj({type:'waga',data:iso,waga:(waga.d&&waga.d[iso])||'',pas:v,uwagi:''});
   },1500);
 }
 function planHTML(){return '<div class="doc">'+
