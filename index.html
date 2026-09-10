@@ -91,6 +91,31 @@ header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px s
 .btn.g{background:var(--ok);border-color:var(--ok);color:#fff}
 textarea{width:100%;height:110px;margin-top:8px;padding:9px;border-radius:9px;border:1px solid var(--line);
          background:var(--card2);color:var(--ink);font-size:11px;font-family:ui-monospace,monospace}
+/* ---- dieta ---- */
+.dcard{margin:11px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.dhead{padding:9px 12px;background:var(--card2);border-bottom:1px solid var(--line)}
+.dhead h3{font-family:"Barlow Condensed",sans-serif;font-size:16.5px;font-weight:700;letter-spacing:.02em}
+.dhead .cel{font-size:11.5px;color:var(--soft);margin-top:2px}
+.dhead .cel b{color:var(--ink);font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:700}
+.dwrap{display:grid;grid-template-columns:1fr 1fr}
+.dwrap.one{grid-template-columns:1fr}
+.dv{min-width:0}
+.dv+.dv{border-left:1px solid var(--line)}
+.dvh{font-family:"Barlow Condensed",sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.09em;
+     text-transform:uppercase;color:#fff;padding:4px 11px}
+.dgrp{font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);
+      padding:9px 11px 3px;background:rgba(15,23,42,.35)}
+.dgrp span{font-family:"IBM Plex Sans",sans-serif;font-weight:400;letter-spacing:0;text-transform:none;
+           color:#64748B;font-size:10px}
+.drow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:baseline;
+      padding:4px 11px;border-top:1px solid var(--hair);font-size:11.5px}
+.drow:first-of-type{border-top:none}
+.drow .nm{line-height:1.3;min-width:0}
+.drow .nm em{display:block;font-style:normal;font-size:9.5px;color:#64748B;margin-top:1px}
+.drow .v{font-family:"Barlow Condensed",sans-serif;font-size:14px;font-weight:600;white-space:nowrap;text-align:right}
+.drow .v i{display:block;font-style:normal;font-size:9.5px;font-weight:400;color:#64748B;font-family:"IBM Plex Sans",sans-serif}
+.dnote{padding:7px 11px 9px;font-size:10.5px;color:var(--alert);line-height:1.45}
+@media (max-width:700px){ .dwrap{grid-template-columns:1fr} .dv+.dv{border-left:none;border-top:2px solid var(--line)} }
 .timer{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--card);border-top:1px solid var(--line);
        padding:8px 10px calc(8px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:5px}
 .timer .t{font-family:"Barlow Condensed",sans-serif;font-size:24px;font-weight:700;min-width:52px}
@@ -718,35 +743,37 @@ function dietaHTML(){
     ['Gorzka czekolada 85%',46],['Siemię lniane mielone',42],['Nasiona chia',31],['Awokado',15]];
   const OW=[['Banan',20],['Borówki / gruszka',12],['Truskawki',6],['Maliny',5]];
 
-  function tab(wiersze){ return '<table class="mini">'+wiersze.map(function(w){
-    return '<tr><td>'+w[0]+'</td><td class="g">'+w[1]+'</td>'+(w[2]?'<td class="conv">'+w[2]+'</td>':'<td></td>')+'</tr>';
-  }).join('')+'</table>'; }
-  function sub(t,p){ return '<div class="sub2">'+t+(p?' <span class="conv">'+p+'</span>':'')+'</div>'; }
+  const grp=(t,p)=>'<div class="dgrp">'+t+(p?' <span>'+p+'</span>':'')+'</div>';
+  const row=(nazwa,pod,wart,dop)=>'<div class="drow"><span class="nm">'+nazwa+
+      (pod?'<em>'+pod+'</em>':'')+'</span><span class="v">'+wart+(dop?'<i>'+dop+'</i>':'')+'</span></div>';
 
-  function wariant(tytul,kolor,W,B,T,wg,strzaczki){
+  function wariant(tytul,kolor,W,B,T,wg,zeStraczkami){
     const vB=wg*0.015, vT=wg*0.002;
-    let lb=0, lf=0, rem=W, leg='';
-    if(strzaczki){ lb=50*LG[1]/100; lf=50*LG[2]/100; rem=Math.max(0,W-50*LG[0]/100);
-      leg=tab([['Strączki <span class="conv">sucha masa</span>','50 g','wnosi 11 g B']]); }
+    let lb=0, lf=0, rem=W, head='';
+    if(zeStraczkami){
+      lb=50*LG[1]/100; lf=50*LG[2]/100; rem=Math.max(0,W-50*LG[0]/100);
+      head=grp('Strączki','stała porcja')+row('Fasola / soczewica','sucha masa','50 g','wnosi 11 g B');
+    }
     const g=r5(rem/(GR[0]/100));
     const need=Math.max(0,r5(B-lb-g*GR[1]/100-vB));
     const base=Math.max(0,r5(T-lf-g*GR[2]/100-vT));
-    const pr=BIALKA.map(function(b){
+    let pr='', gw=false;
+    BIALKA.forEach(function(b){
       const pg=r5(need/(b[1]/100)), pf=pg*b[2]/100;
-      return [b[0]+(pf>=3?' <span class="star">*</span>':''), pg+' g', pf>=1?('wnosi '+pf.toFixed(0)+' g T'):''];
+      if(pf>=3) gw=true;
+      pr+=row(b[0]+(pf>=3?' <span class="star">*</span>':''),'',pg+' g',pf>=1?('wnosi '+pf.toFixed(0)+' g T'):'');
     });
-    pr.push(['Jajka <span class="conv">1 żółtko</span>', Math.max(1,Math.round(1+(need-6.3)/3.6))+' szt.','wnosi ~6 g T']);
-    const gwiazdka = pr.some(function(x){return x[0].indexOf('star')>=0;});
-    return '<div class="variant"><div class="vh" style="background:'+kolor+'">'+tytul+'</div>'+
-      (strzaczki?sub('Strączki','stała porcja')+leg:'')+
-      sub('Węglowodany',strzaczki?'dopełnienie':'')+
-      tab([['Kasza / ryż / quinoa <span class="conv">sucha</span>',g+' g',''],
-           ['Chleb żytni',r5(rem/(CH/100))+' g','zamiennik']])+
-      sub('Białko','do dobrania: '+need+' g')+tab(pr)+
-      sub('Tłuszcze','do dodania: '+base+' g')+
-      tab(TL.map(function(f){return [f[0], r5(base/(f[1]/100))+' g','10 g T = '+Math.round(10/f[1]*100)+' g'];}))+
-      (gwiazdka?'<div class="adj">Przy oznaczonych * odejmij tłuszcz, który wnoszą.</div>':'')+
-      '</div>';
+    pr+=row('Jajka','1 żółtko',Math.max(1,Math.round(1+(need-6.3)/3.6))+' szt.','wnosi ~6 g T');
+    let tl='';
+    TL.forEach(function(f){ tl+=row(f[0],'',r5(base/(f[1]/100))+' g','10 g T = '+Math.round(10/f[1]*100)+' g'); });
+    return '<div class="dv"><div class="dvh" style="background:'+kolor+'">'+tytul+'</div>'+
+      head+
+      grp('Węglowodany',zeStraczkami?'dopełnienie':'')+
+      row('Kasza / ryż / quinoa','sucha masa',g+' g','')+
+      row('Chleb żytni','zamiennik',r5(rem/(CH/100))+' g','')+
+      grp('Białko','do dobrania: '+need+' g')+pr+
+      grp('Tłuszcze','do dodania: '+base+' g')+tl+
+      (gw?'<div class="dnote">Przy oznaczonych * odejmij tłuszcz, który wnoszą.</div>':'')+'</div>';
   }
 
   let out='<div class="banner"><b>Schemat posiłków.</b> Z każdej grupy wybierasz jedno. '+
@@ -757,35 +784,40 @@ function dietaHTML(){
 
   POSILKI[dietaDzien].forEach(function(p){
     const [nm,W,B,T,wg,typ]=p;
-    let body='';
+    let body='', jedna=false;
     if(typ==='ows'){
-      const pl = dietaDzien==='T'?105:60;
-      const nB = r5(B - pl*0.13 - 9 - 1);
-      const nT = r5(T - pl*0.07 - 5.4 - 0.5 - 1);
-      body='<div class="variant" style="grid-column:1/-1">'+
-        sub('Baza','bez wyboru')+tab([['Płatki owsiane',pl+' g','wnosi '+(pl*0.13).toFixed(1)+' g B, '+(pl*0.07).toFixed(1)+' g T'],
-          ['Mleko sojowe','300 ml','wnosi 9 g B, 5,4 g T'],['Cynamon','szczypta','']])+
-        sub('Owoce','wybierz jedno')+tab(OW.map(function(o){return [o[0], r5(20/(o[1]/100))+' g',''];}))+
-        sub('Białko','do dobrania: '+nB+' g')+tab([['Odżywka białkowa',r5(nB/0.8)+' g',''],['Skyr naturalny',r5(nB/0.11)+' g','']])+
-        sub('Tłuszcze','do dodania: '+nT+' g')+
-        tab(TL.filter(function(f){return f[0]!=='Awokado';}).map(function(f){
-          return [f[0], r5(nT/(f[1]/100))+' g','10 g T = '+Math.round(10/f[1]*100)+' g'];}))+'</div>';
+      jedna=true;
+      const pl=dietaDzien==='T'?105:60;
+      const nB=r5(B-pl*0.13-9-1), nT=r5(T-pl*0.07-5.4-0.5-1);
+      let f=''; TL.filter(x=>x[0]!=='Awokado').forEach(function(x){
+        f+=row(x[0],'',r5(nT/(x[1]/100))+' g','10 g T = '+Math.round(10/x[1]*100)+' g'); });
+      body='<div class="dv">'+
+        grp('Baza','bez wyboru')+
+        row('Płatki owsiane','',pl+' g','wnosi '+(pl*0.13).toFixed(1)+' g B, '+(pl*0.07).toFixed(1)+' g T')+
+        row('Mleko sojowe','',300+' ml','wnosi 9 g B, 5,4 g T')+
+        row('Cynamon','','szczypta','')+
+        grp('Owoce','wybierz jedno')+OW.map(o=>row(o[0],'',r5(20/(o[1]/100))+' g','')).join('')+
+        grp('Białko','do dobrania: '+nB+' g')+
+        row('Odżywka białkowa','',r5(nB/0.8)+' g','')+row('Skyr naturalny','',r5(nB/0.11)+' g','')+
+        grp('Tłuszcze','do dodania: '+nT+' g')+f+'</div>';
     } else if(typ==='szejk'){
-      body='<div class="variant" style="grid-column:1/-1">'+
-        sub('Baza','')+tab([['Mleko sojowe','300 ml','wnosi 9 g B, 5,4 g T']])+
-        sub('Owoce','wybierz jedno')+tab(OW.map(function(o){return [o[0], r5(40/(o[1]/100))+' g',''];}))+
-        sub('Białko','do dobrania: 15 g')+tab([['Odżywka białkowa','20 g',''],['Skyr naturalny','135 g',''],['Jajka','3 szt.','']])+
-        sub('Tłuszcze','do dodania: 10 g · zmielone nasiona')+
-        tab([['Nasiona chia','32 g',''],['Siemię lniane mielone','24 g',''],['Orzechy włoskie','15 g','']])+
-        '<div class="adj">Ten tłuszcz jest odjęty od posiłku potreningowego — dlatego ma on cel 15 g zamiast 25 g.</div></div>';
+      jedna=true;
+      body='<div class="dv">'+
+        grp('Baza','')+row('Mleko sojowe','','300 ml','wnosi 9 g B, 5,4 g T')+
+        grp('Owoce','wybierz jedno')+OW.map(o=>row(o[0],'',r5(40/(o[1]/100))+' g','')).join('')+
+        grp('Białko','do dobrania: 15 g')+
+        row('Odżywka białkowa','','20 g','')+row('Skyr naturalny','','135 g','')+row('Jajka','','3 szt.','')+
+        grp('Tłuszcze','do dodania: 10 g · zmielone nasiona')+
+        row('Nasiona chia','','32 g','')+row('Siemię lniane mielone','','24 g','')+row('Orzechy włoskie','','15 g','')+
+        '<div class="dnote">Ten tłuszcz jest odjęty od posiłku potreningowego — dlatego ma on cel 15 g zamiast 25 g.</div></div>';
     } else {
-      body = wariant('Bez strączków','var(--acc)',W,B,T,wg,false) +
-             wariant('Ze strączkami','#5B4A7A',W,B,T,wg,true);
+      body=wariant('Bez strączków','var(--acc)',W,B,T,wg,false)+
+           wariant('Ze strączkami','#5B4A7A',W,B,T,wg,true);
     }
-    out+='<div class="ex"><div class="mh" style="cursor:pointer" onclick="this.parentNode.querySelector(\'.info\').classList.toggle(\'on\')">'+
-      '<h3>'+nm+'</h3><span class="mt">cel: <b>'+W+'</b> W · <b>'+B+'</b> B · <b>'+T+'</b> T'+
-      (wg?' &nbsp;·&nbsp; warzywa '+wg+' g':'')+'</span></div>'+
-      '<div class="info on"><div class="variants">'+body+'</div></div></div>';
+    out+='<div class="dcard"><div class="dhead"><h3>'+nm+'</h3>'+
+      '<div class="cel">cel: <b>'+W+'</b> W · <b>'+B+'</b> B · <b>'+T+'</b> T'+
+      (wg?' &nbsp;·&nbsp; warzywa '+wg+' g':'')+'</div></div>'+
+      '<div class="dwrap'+(jedna?' one':'')+'">'+body+'</div></div>';
   });
   out+='<div class="legend">Warzywa: zielone liściaste codziennie (szpinak, jarmuż, rukola 100 g), '+
     'kapustne 4–5× w tygodniu (brokuł, kalafior 200 g), reszta bez limitu (pomidory, cukinia, pieczarki 250 g). '+
