@@ -72,6 +72,10 @@ header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px s
            color:var(--ink);font-size:16px;text-align:center;font-family:"Barlow Condensed",sans-serif;font-weight:600}
 .row input:focus{outline:none;border-color:var(--acc)}
 .row input::placeholder{color:#475569;font-weight:400}
+.uw{width:100%;margin-top:8px;padding:8px 10px;border-radius:9px;border:1px solid var(--line);
+    background:var(--card2);color:var(--ink);font-size:12.5px;font-family:inherit}
+.uw:focus{outline:none;border-color:var(--acc)}
+.uw::placeholder{color:#475569}
 .prev{font-size:10.5px;color:#64748B;text-align:center;padding-top:3px}.prev b{color:var(--warn)}
 .doc{margin:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
 .doc h2{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--acc);margin-bottom:7px}
@@ -254,7 +258,7 @@ function syncSeria(id,j){
   const isT=wk==='t';
   kolejkuj({type:'trening',rows:[{data:dzis(),tydzien:w.label||wk,dzien:dz,cwiczenie:ex.n,
     seria:String(j+1),ciezar:d.kg,powt:d.rp,rir:w.rir||'',
-    uwagi:(isT&&ex.tw)?(j===0?'seria T':'po \u221220%'):''}]});
+    uwagi:[(isT&&ex.tw)?(j===0?'seria T':'po \u221220%'):'', (log[id]||{}).uw].filter(Boolean).join(' \u00b7 ')}]});
 }
 
 const TRENING=['A','B','C','D'];
@@ -290,6 +294,25 @@ function render(){
 function setW(w){W=w;S.set('rp_w',w).catch(function(){});render();scrollTo(0,0);}
 function setD(d){D=d;S.set('rp_d',d).catch(function(){});render();scrollTo(0,0);}
 const timery={};
+function updUw(id,v){
+  log[id]=log[id]||{}; log[id].uw=v; save();
+  clearTimeout(timery['u'+id]);
+  timery['u'+id]=setTimeout(function(){ syncUwagi(id); },1800);
+}
+function syncUwagi(id){
+  const [wk,dz,i]=id.split('_'); const ex=PLAN[dz][+i]; if(!ex) return;
+  const w=WEEKS.find(x=>x.id===wk)||{};
+  const dane=log[id]||{}; const isT=wk==='t';
+  const rows=[];
+  Object.keys(dane).forEach(function(j){
+    if(isNaN(+j)) return;
+    const d=dane[j]; if(!d||!d.kg||!d.rp) return;
+    const tag=(isT&&ex.tw)?(+j===0?'seria T':'po \u221220%'):'';
+    rows.push({data:dzis(),tydzien:w.label||wk,dzien:dz,cwiczenie:ex.n,seria:String(+j+1),
+      ciezar:d.kg,powt:d.rp,rir:w.rir||'',uwagi:[tag,dane.uw].filter(Boolean).join(' \u00b7 ')});
+  });
+  if(rows.length) kolejkuj({type:'trening',rows:rows});
+}
 function upd(id,j,f,v){
   (log[id]=log[id]||{}); (log[id][j]=log[id][j]||{}); log[id][j][f]=v; save();
   const k=id+'_'+j;
@@ -303,7 +326,7 @@ function syncSeria(id,j){
   const isT=wk==='t';
   kolejkuj({type:'trening',rows:[{data:dzis(),tydzien:w.label||wk,dzien:dz,cwiczenie:ex.n,
     seria:String(j+1),ciezar:d.kg,powt:d.rp,rir:w.rir||'',
-    uwagi:(isT&&ex.tw)?(j===0?'seria T':'po \u221220%'):''}]});
+    uwagi:[(isT&&ex.tw)?(j===0?'seria T':'po \u221220%'):'', (log[id]||{}).uw].filter(Boolean).join(' \u00b7 ')}]});
 }
 
 
@@ -628,7 +651,8 @@ function sessHTML(){
       '<div class="r">'+(isT&&ex.tw?'potem '+ex.tw2+' kg':ex.r+' powt.')+'</div></div></div>'+
       '<div class="info">'+obrazki(D,i,ex.n)+(ex.w?'<div class="lead">'+ex.w+'</div>':'')+
       '<div class="warm">'+(ex.warm?'<b>Rozgrzewka 12-8-4:</b> 12 powt. ~50% ci\u0119\u017caru roboczego \u2192 8 powt. ~70% \u2192 4 powt. ~85%. Serii rozgrzewkowych nie zapisujesz.':'Rozgrzewka: 1 lekka seria wystarczy.')+'</div></div>'+
-      '<div class="sets"><div class="lbl"><span></span><span>ci\u0119\u017car</span><span>powt.</span></div>'+rows+prev+'</div></div>';
+      '<div class="sets"><div class="lbl"><span></span><span>ci\u0119\u017car</span><span>powt.</span></div>'+rows+prev+
+        '<input class="uw" placeholder="uwagi do \u0107wiczenia\u2026" value="'+((log[id]||{}).uw||'')+'" oninput="updUw(\''+id+'\',this.value)">'+'</div></div>';
   }).join('');
 }
 
@@ -666,12 +690,12 @@ let kalk={dzien:'T',posilek:'T|Śniadanie (owsianka)',skl:[]};
 
 /* ================= ZAKŁADKA DIETA ================= */
 const POSILKI={
-T:[['Śniadanie — owsianka',87,45,30,0,'płatki 105 g + mleko sojowe 300 ml'],
-   ['Szejk potreningowy',45,25,15,0,'mleko sojowe 300 ml + owoc + odżywka + nasiona'],
+T:[['Śniadanie — owsianka',87,45,30,0,'ows'],
    ['Posiłek przedtreningowy',65,35,30,250,''],
-   ['Posiłek potreningowy',80,35,15,200,'tu wysokie IG — biały ryż, drobna kasza, makaron'],
-   ['Kolacja',33,35,30,200,'najniżej węglowodanowa w dobie — celowo']],
-N:[['Śniadanie — owsianka',58,40,32,0,'płatki 60 g + mleko sojowe 300 ml'],
+   ['Szejk potreningowy',45,25,15,0,'szejk'],
+   ['Posiłek potreningowy',80,35,15,200,''],
+   ['Kolacja',33,35,30,200,'']],
+N:[['Śniadanie — owsianka',58,40,32,0,'ows'],
    ['Lunch',48,35,30,250,''],
    ['Obiad',48,35,30,250,''],
    ['Kolacja',33,35,30,200,'']]};
@@ -686,53 +710,86 @@ let dietaDzien='T';
 
 function dietaHTML(){
   const r5=v=>Math.round(v/5)*5;
-  let out='<div class="banner"><b>Rozpiska posiłków.</b> Cel w gramach makro, pod spodem ile czego odważyć. '+
-    'Z każdej grupy wybierasz jedno. Wkłady z kaszy i warzyw są już odjęte od porcji białka.</div>'+
-    '<div class="ex"><div class="sets" style="padding:10px"><div class="row" style="grid-template-columns:1fr 1fr">'+
+  const GR=[68,11.2,3.8], CH=48, LG=[49.2,22.2,1.2];
+  const BIALKA=[['Pierś z kurczaka / indyka',23.5,1.25],['Łosoś świeży',20,13],['Łosoś wędzony',20,12],
+    ['Tofu',12,7],['Skyr naturalny',11,0.2],['Twaróg chudy',19,0.5],['Serek wiejski lekki',12,2],
+    ['Odżywka białkowa',80,4]];
+  const TL=[['Oliwa',100],['Orzechy pekan',72],['Orzechy włoskie / brazylijskie',65],['Migdały',50],
+    ['Gorzka czekolada 85%',46],['Siemię lniane mielone',42],['Nasiona chia',31],['Awokado',15]];
+  const OW=[['Banan',20],['Borówki / gruszka',12],['Truskawki',6],['Maliny',5]];
+
+  function tab(wiersze){ return '<table class="mini">'+wiersze.map(function(w){
+    return '<tr><td>'+w[0]+'</td><td class="g">'+w[1]+'</td>'+(w[2]?'<td class="conv">'+w[2]+'</td>':'<td></td>')+'</tr>';
+  }).join('')+'</table>'; }
+  function sub(t,p){ return '<div class="sub2">'+t+(p?' <span class="conv">'+p+'</span>':'')+'</div>'; }
+
+  function wariant(tytul,kolor,W,B,T,wg,strzaczki){
+    const vB=wg*0.015, vT=wg*0.002;
+    let lb=0, lf=0, rem=W, leg='';
+    if(strzaczki){ lb=50*LG[1]/100; lf=50*LG[2]/100; rem=Math.max(0,W-50*LG[0]/100);
+      leg=tab([['Strączki <span class="conv">sucha masa</span>','50 g','wnosi 11 g B']]); }
+    const g=r5(rem/(GR[0]/100));
+    const need=Math.max(0,r5(B-lb-g*GR[1]/100-vB));
+    const base=Math.max(0,r5(T-lf-g*GR[2]/100-vT));
+    const pr=BIALKA.map(function(b){
+      const pg=r5(need/(b[1]/100)), pf=pg*b[2]/100;
+      return [b[0]+(pf>=3?' <span class="star">*</span>':''), pg+' g', pf>=1?('wnosi '+pf.toFixed(0)+' g T'):''];
+    });
+    pr.push(['Jajka <span class="conv">1 żółtko</span>', Math.max(1,Math.round(1+(need-6.3)/3.6))+' szt.','wnosi ~6 g T']);
+    const gwiazdka = pr.some(function(x){return x[0].indexOf('star')>=0;});
+    return '<div class="variant"><div class="vh" style="background:'+kolor+'">'+tytul+'</div>'+
+      (strzaczki?sub('Strączki','stała porcja')+leg:'')+
+      sub('Węglowodany',strzaczki?'dopełnienie':'')+
+      tab([['Kasza / ryż / quinoa <span class="conv">sucha</span>',g+' g',''],
+           ['Chleb żytni',r5(rem/(CH/100))+' g','zamiennik']])+
+      sub('Białko','do dobrania: '+need+' g')+tab(pr)+
+      sub('Tłuszcze','do dodania: '+base+' g')+
+      tab(TL.map(function(f){return [f[0], r5(base/(f[1]/100))+' g','10 g T = '+Math.round(10/f[1]*100)+' g'];}))+
+      (gwiazdka?'<div class="adj">Przy oznaczonych * odejmij tłuszcz, który wnoszą.</div>':'')+
+      '</div>';
+  }
+
+  let out='<div class="banner"><b>Schemat posiłków.</b> Z każdej grupy wybierasz jedno. '+
+    'Warianty <b>bez strączków</b> i <b>ze strączkami</b> są wymienne — możesz je mieszać w ciągu dnia.</div>'+
+    '<div class="days" style="padding:0 14px 6px">'+
     '<div class="dy '+(dietaDzien==='T'?'on':'')+'" onclick="dietaD(\'T\')">Treningowy<small>~3230 kcal</small></div>'+
-    '<div class="dy '+(dietaDzien==='N'?'on':'')+'" onclick="dietaD(\'N\')">Nietreningowy<small>~2580 kcal</small></div>'+
-    '</div></div></div>';
+    '<div class="dy '+(dietaDzien==='N'?'on':'')+'" onclick="dietaD(\'N\')">Nietreningowy<small>~2580 kcal</small></div></div>';
 
   POSILKI[dietaDzien].forEach(function(p){
-    const [nm,W,B,T,wg,uw]=p;
-    const owsianka = nm.indexOf('owsianka')>=0, szejk = nm.indexOf('Szejk')>=0;
+    const [nm,W,B,T,wg,typ]=p;
     let body='';
-    if(owsianka||szejk){
-      body='<div class="sub2">Skład</div><table class="mini"><tr><td>'+uw+'</td></tr></table>';
-      const nB = owsianka ? r5(B-(dietaDzien==='T'?13.7:7.8)-9-1) : 15;
-      const nT = owsianka ? r5(T-(dietaDzien==='T'?7.4:4.2)-5.4-1.5) : 10;
-      body+='<div class="sub2">Białko <span class="conv">do dobrania: '+nB+' g</span></div><table class="mini">'+
-        '<tr><td>Odżywka białkowa</td><td class="g">'+r5(nB/0.8)+' g</td></tr>'+
-        '<tr><td>Skyr naturalny</td><td class="g">'+r5(nB/0.11)+' g</td></tr></table>';
-      body+='<div class="sub2">Tłuszcze <span class="conv">do dodania: '+nT+' g</span></div><table class="mini">'+
-        TLUSZCZE.map(f=>'<tr><td>'+f[0]+'</td><td class="g">'+r5(nT/(f[1]/100))+' g</td></tr>').join('')+'</table>';
+    if(typ==='ows'){
+      const pl = dietaDzien==='T'?105:60;
+      const nB = r5(B - pl*0.13 - 9 - 1);
+      const nT = r5(T - pl*0.07 - 5.4 - 0.5 - 1);
+      body='<div class="variant" style="grid-column:1/-1">'+
+        sub('Baza','bez wyboru')+tab([['Płatki owsiane',pl+' g','wnosi '+(pl*0.13).toFixed(1)+' g B, '+(pl*0.07).toFixed(1)+' g T'],
+          ['Mleko sojowe','300 ml','wnosi 9 g B, 5,4 g T'],['Cynamon','szczypta','']])+
+        sub('Owoce','wybierz jedno')+tab(OW.map(function(o){return [o[0], r5(20/(o[1]/100))+' g',''];}))+
+        sub('Białko','do dobrania: '+nB+' g')+tab([['Odżywka białkowa',r5(nB/0.8)+' g',''],['Skyr naturalny',r5(nB/0.11)+' g','']])+
+        sub('Tłuszcze','do dodania: '+nT+' g')+
+        tab(TL.filter(function(f){return f[0]!=='Awokado';}).map(function(f){
+          return [f[0], r5(nT/(f[1]/100))+' g','10 g T = '+Math.round(10/f[1]*100)+' g'];}))+'</div>';
+    } else if(typ==='szejk'){
+      body='<div class="variant" style="grid-column:1/-1">'+
+        sub('Baza','')+tab([['Mleko sojowe','300 ml','wnosi 9 g B, 5,4 g T']])+
+        sub('Owoce','wybierz jedno')+tab(OW.map(function(o){return [o[0], r5(40/(o[1]/100))+' g',''];}))+
+        sub('Białko','do dobrania: 15 g')+tab([['Odżywka białkowa','20 g',''],['Skyr naturalny','135 g',''],['Jajka','3 szt.','']])+
+        sub('Tłuszcze','do dodania: 10 g · zmielone nasiona')+
+        tab([['Nasiona chia','32 g',''],['Siemię lniane mielone','24 g',''],['Orzechy włoskie','15 g','']])+
+        '<div class="adj">Ten tłuszcz jest odjęty od posiłku potreningowego — dlatego ma on cel 15 g zamiast 25 g.</div></div>';
     } else {
-      const vB=wg*0.015, vT=wg*0.002;
-      body='<div class="sub2">Węglowodany</div><table class="mini">'+
-        ZBOZA.map(z=>'<tr><td>'+z[0]+'</td><td class="g">'+r5(W/(z[1]/100))+' g</td></tr>').join('')+
-        '<tr><td>Strączki <span class="conv">+ zboża '+r5(Math.max(0,W-50*STRACZ/100)/(0.68))+' g</span></td><td class="g">50 g</td></tr></table>';
-      const gb=ZBOZA[0][2]*r5(W/(ZBOZA[0][1]/100))/100;
-      const need=Math.max(0,r5(B-gb-vB));
-      body+='<div class="sub2">Białko <span class="conv">do dobrania: '+need+' g</span></div><table class="mini">'+
-        BIALKA.map(function(b){
-          if(b[1]===0) return '<tr><td>'+b[0]+'</td><td class="g">'+Math.max(1,Math.round(need/4.3))+' szt.</td></tr>';
-          const pg=r5(need/(b[1]/100)), pf=pg*b[2]/100;
-          return '<tr><td>'+b[0]+(pf>=3?' <span class="star">*</span>':'')+'</td><td class="g">'+pg+' g</td>'+
-                 '<td class="conv">'+(pf>=1?'wnosi '+pf.toFixed(0)+' g T':'')+'</td></tr>';
-        }).join('')+'</table>';
-      const gf=ZBOZA[0][3]*r5(W/(ZBOZA[0][1]/100))/100;
-      const base=Math.max(0,r5(T-gf-vT-1.5));
-      body+='<div class="sub2">Tłuszcze <span class="conv">do dodania: '+base+' g</span></div><table class="mini">'+
-        TLUSZCZE.map(f=>'<tr><td>'+f[0]+'</td><td class="g">'+r5(base/(f[1]/100))+' g</td></tr>').join('')+'</table>'+
-        '<div class="adj">Przy łososiu i tofu odejmij od tłuszczu to, co wnoszą (kolumna obok).</div>';
+      body = wariant('Bez strączków','var(--acc)',W,B,T,wg,false) +
+             wariant('Ze strączkami','#5B4A7A',W,B,T,wg,true);
     }
-    out+='<div class="ex"><div class="exh" onclick="this.parentNode.querySelector(\'.info\').classList.toggle(\'on\')">'+
-      '<div><h3>'+nm+'</h3><div class="m">'+(wg?'warzywa '+wg+' g':'')+(uw&&!owsianka&&!szejk?' · '+uw:'')+'</div></div>'+
-      '<div class="tgt"><div class="s">'+W+' W</div><div class="r">'+B+' B · '+T+' T</div></div></div>'+
-      '<div class="info on">'+body+'</div></div>';
+    out+='<div class="ex"><div class="mh" style="cursor:pointer" onclick="this.parentNode.querySelector(\'.info\').classList.toggle(\'on\')">'+
+      '<h3>'+nm+'</h3><span class="mt">cel: <b>'+W+'</b> W · <b>'+B+'</b> B · <b>'+T+'</b> T'+
+      (wg?' &nbsp;·&nbsp; warzywa '+wg+' g':'')+'</span></div>'+
+      '<div class="info on"><div class="variants">'+body+'</div></div></div>';
   });
-  out+='<div class="legend">Warzywa: zielone liściaste codziennie (szpinak, jarmuż, rukola 100 g), kapustne 4–5× w tygodniu (brokuł, kalafior 200 g), '+
-    'reszta bez limitu (pomidory, cukinia, pieczarki 250 g). Marchewka do 100 g nie liczy się do węgli — powyżej odejmij 10 g kaszy za każde 100 g.</div>';
+  out+='<div class="legend">Warzywa: zielone liściaste codziennie (szpinak, jarmuż, rukola 100 g), '+
+    'kapustne 4–5× w tygodniu (brokuł, kalafior 200 g), reszta bez limitu (pomidory, cukinia, pieczarki 250 g). '+
+    'Marchewka do 100 g nie liczy się do węgli — powyżej odejmij 10 g kaszy za każde 100 g.</div>';
   return out;
 }
 function dietaD(v){ dietaDzien=v; render(); }
@@ -795,15 +852,9 @@ function kalkG(i,v){ kalk.skl[i].g=parseFloat(v)||0; S.set('rp_kalk',JSON.string
 function kalkDel(i){ kalk.skl.splice(i,1); S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render(); }
 function kalkClear(){ kalk.skl=[]; S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render(); }
 
+const START='2026-09-07';
 function wagaHTML(){
-  const start=waga.start||'';
-  if(!start){
-    return '<div class="banner"><b>Ustaw datę startu.</b> Podaj poniedziałek tygodnia testowego — na tej podstawie aplikacja sama policzy daty wszystkich tygodni i nie będziesz musiał ich wpisywać.</div>'+
-    '<div class="ex"><div class="sets" style="padding-top:12px">'+
-    '<div class="row" style="grid-template-columns:1fr"><input type="date" value="" onchange="ustawStart(this.value)" '+
-    'style="padding:11px;border-radius:9px;background:var(--card2);color:var(--ink);border:1px solid var(--line);font-size:15px"></div>'+
-    '</div></div>';
-  }
+  const start=START;
   const w=WEEKS.find(x=>x.id===W)||WEEKS[1];
   const nrT=['t','1','2','3','4','d'].indexOf(W);
   const pon=new Date(start+'T12:00:00'); pon.setDate(pon.getDate()+nrT*7);
@@ -823,6 +874,57 @@ function wagaHTML(){
   const vals=[]; for(let k=0;k<7;k++){const d=new Date(pon);d.setDate(pon.getDate()+k);
     const q=(waga.d&&waga.d[d.toISOString().slice(0,10)]); if(q) vals.push(parseFloat(q));}
   const sr=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length):0;
+  /* --- porównanie z poprzednim tygodniem --- */
+  function sredniaTyg(offset){
+    const p=new Date(pon); p.setDate(pon.getDate()+offset*7);
+    const v=[];
+    for(let k=0;k<7;k++){ const d=new Date(p); d.setDate(p.getDate()+k);
+      const q=(waga.d||{})[d.toISOString().slice(0,10)]; if(q) v.push(parseFloat(q)); }
+    return v.length ? {sr:v.reduce((a,b)=>a+b,0)/v.length, n:v.length} : null;
+  }
+  function pasTyg(offset){
+    const p=new Date(pon); p.setDate(pon.getDate()+offset*7);
+    const q=(waga.p||{})[p.toISOString().slice(0,10)];
+    return q?parseFloat(q):null;
+  }
+  const teraz=sredniaTyg(0), przed=sredniaTyg(-1);
+  const pasT=pasTyg(0), pasP=pasTyg(-1);
+  let ocena='';
+  if(teraz && przed){
+    const dW=teraz.sr-przed.sr;
+    const dP=(pasT!==null&&pasP!==null)?(pasT-pasP):null;
+    let kol,tyt,tekst;
+    if(dW < 0.05){
+      kol='var(--warn)'; tyt='Za wolno — dołóż węglowodany';
+      tekst='Przyrost '+dW.toFixed(2)+' kg wobec celu 0,14. Dodaj <b>+25 g węglowodanów</b> dziennie w obu typach dni (ok. +100 kcal). Jeśli waga stoi trzeci tydzień z rzędu, dodaj 50 g.';
+    } else if(dW > 0.28){
+      kol='var(--red)'; tyt='Za szybko — zdejmij węglowodany';
+      tekst='Przyrost '+dW.toFixed(2)+' kg wobec celu 0,14. Odejmij <b>−25 g węglowodanów</b> dziennie (ok. −100 kcal).';
+    } else {
+      kol='var(--ok)'; tyt='Tempo trafione — nic nie zmieniaj';
+      tekst='Przyrost '+dW.toFixed(2)+' kg mieści się w celu 0,10–0,28 kg/tydzień.';
+    }
+    if(dP!==null && dP>0.7 && dW<=0.28){
+      kol='var(--warn)'; tyt='Pas rośnie szybciej niż masa';
+      tekst='Waga +'+dW.toFixed(2)+' kg, ale pas +'+dP.toFixed(1)+' cm. To sygnał, że przyrost idzie w tłuszcz — odejmij <b>−25 g węglowodanów</b>.';
+    }
+    ocena='<div class="ex"><div class="sets" style="padding:11px">'+
+      '<div style="font-family:Barlow Condensed;font-size:16px;font-weight:700;color:'+kol+'">'+tyt+'</div>'+
+      '<div style="font-size:12px;color:var(--soft);line-height:1.55;margin-top:5px">'+tekst+'</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;padding-top:9px;border-top:1px solid var(--line);text-align:center">'+
+      '<div><div style="font-size:10px;color:var(--soft);text-transform:uppercase">poprzedni</div>'+
+        '<div style="font-family:Barlow Condensed;font-size:18px;font-weight:700">'+przed.sr.toFixed(2)+'</div></div>'+
+      '<div><div style="font-size:10px;color:var(--soft);text-transform:uppercase">teraz</div>'+
+        '<div style="font-family:Barlow Condensed;font-size:18px;font-weight:700">'+teraz.sr.toFixed(2)+'</div></div>'+
+      '<div><div style="font-size:10px;color:var(--soft);text-transform:uppercase">zmiana</div>'+
+        '<div style="font-family:Barlow Condensed;font-size:18px;font-weight:700;color:'+kol+'">'+(dW>=0?'+':'')+dW.toFixed(2)+'</div></div>'+
+      '</div>'+
+      (dP!==null?'<div class="prev" style="padding-top:7px">pas: '+pasP.toFixed(1)+' \u2192 '+pasT.toFixed(1)+' cm ('+(dP>=0?'+':'')+dP.toFixed(1)+')</div>':'')+
+      '</div></div>';
+  } else if(teraz && !przed){
+    ocena='<div class="legend">Ocena tempa pojawi si\u0119 po drugim tygodniu \u2014 potrzebne s\u0105 dwie \u015brednie do por\u00f3wnania.</div>';
+  }
+
   return '<div class="banner"><b>'+w.label+'</b> \u2014 tydzie\u0144 od '+isoPon+'. Wa\u017c si\u0119 rano na czczo, po toalecie. '+
     'Liczy si\u0119 <b>\u015brednia tygodniowa</b>, nie pojedynczy pomiar.</div>'+
     '<div class="ex"><div class="sets" style="padding-top:11px">'+
@@ -835,17 +937,10 @@ function wagaHTML(){
     '<div class="row" style="grid-template-columns:1fr 1fr">'+
     '<span style="font-size:11.5px;color:var(--soft);align-self:center">pomiar w '+isoPon.slice(5)+'</span>'+
     '<input inputmode="decimal" placeholder="79" value="'+pas+'" oninput="updPas(\''+isoPon+'\',this.value)"></div>'+
-    '<div class="prev" style="padding-top:8px">Mierz w tym samym miejscu, rano, bez wci\u0105gania brzucha.</div>'+
     '</div></div>'+
-    '<div class="legend">Cel: <b style="color:var(--ink)">+0,5 kg na 2 tygodnie</b>. Je\u015bli przy +2 kg masy pas ur\u00f3s\u0142 o wi\u0119cej ni\u017c 1 cm, tempo jest za szybkie. '+
-    'Przełączaj tygodnie paskiem na g\u00f3rze.</div>';
-}
-function ustawStart(v){
-  if(!v) return;
-  const d=new Date(v+'T12:00:00');
-  d.setDate(d.getDate()-((d.getDay()+6)%7));   // cofnij do poniedziałku
-  waga.start=d.toISOString().slice(0,10);
-  S.set('rp_waga',JSON.stringify(waga)).catch(function(){}); render();
+    ocena+
+    '<div class="legend">Cel: <b style="color:var(--ink)">+0,14 kg tygodniowo</b>, ok. 0,6 kg miesi\u0119cznie. '+
+    'Ocena por\u00f3wnuje \u015bredni\u0105 tego tygodnia ze \u015bredni\u0105 poprzedniego.</div>';
 }
 function updDzien(iso,v){
   waga.d=waga.d||{}; waga.d[iso]=v;
