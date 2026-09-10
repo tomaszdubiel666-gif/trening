@@ -99,9 +99,10 @@ textarea{width:100%;height:110px;margin-top:8px;padding:9px;border-radius:9px;bo
 <body>
 <header>
   <div class="hd"><h1>Mezocykl — masa</h1><span class="pill" id="pill">80 → 84 kg</span></div>
+  <div class="days" id="top"></div>
   <div class="weeks" id="weeks"></div>
-  <div class="days" id="days"></div>
-</header>
+  <div class="days" id="days" style="padding-bottom:10px"></div>
+  </header>
 <main id="main"></main>
 <div class="timer">
   <span class="t" id="td">0:00</span>
@@ -246,6 +247,46 @@ async function save(){
 function nSets(ex){const w=WEEKS.find(x=>x.id===W);
   if(w.type==='test')return 3; if(w.type==='dload')return Math.max(2,Math.round(ex.s[0]/2));
   return ex.s[parseInt(W)-1];}
+function syncSeria(id,j){
+  const d=(log[id]||{})[j]; if(!d||!d.kg||!d.rp) return;
+  const [wk,dz,i]=id.split('_'); const ex=PLAN[dz][+i]; if(!ex) return;
+  const w=WEEKS.find(x=>x.id===wk)||{};
+  const isT=wk==='t';
+  kolejkuj({type:'trening',rows:[{data:dzis(),tydzien:w.label||wk,dzien:dz,cwiczenie:ex.n,
+    seria:String(j+1),ciezar:d.kg,powt:d.rp,rir:w.rir||'',
+    uwagi:(isT&&ex.tw)?(j===0?'seria T':'po \u221220%'):''}]});
+}
+
+const TRENING=['A','B','C','D'];
+function render(){
+  const wTren = TRENING.indexOf(D)>=0;
+  const wPom  = D==='W';
+
+  /* poziom 1 — sekcje */
+  const TOP=[['tren','Trening','mezocykl'],['W','Pomiary','waga i pas'],
+             ['J','Dieta','posiłki'],['K','Jedzenie','kalkulator'],['P','Plan','zasady']];
+  document.getElementById('top').innerHTML=TOP.map(function(t){
+    const on = t[0]==='tren' ? wTren : D===t[0];
+    return '<div class="dy '+(on?'on':'')+'" onclick="setD(\''+(t[0]==='tren'?'A':t[0])+'\')">'+
+      t[1]+'<small>'+t[2]+'</small></div>';}).join('');
+
+  /* poziom 2 — tygodnie (trening i pomiary) */
+  const wk=document.getElementById('weeks');
+  wk.style.display = (wTren||wPom) ? 'flex' : 'none';
+  wk.innerHTML = (wTren||wPom) ? WEEKS.map(function(w){
+    return '<div class="wk '+(w.type==='dload'?'dl':'')+' '+(w.type==='test'?'tt':'')+' '+
+      (w.id===W?'on':'')+'" onclick="setW(\''+w.id+'\')">'+w.label+'</div>';}).join('') : '';
+
+  /* poziom 3 — dni treningowe */
+  const dz=document.getElementById('days');
+  dz.style.display = wTren ? 'flex' : 'none';
+  dz.innerHTML = wTren ? DAYS.map(function(d){
+    return '<div class="dy '+(d.id===D?'on':'')+'" onclick="setD(\''+d.id+'\')">'+
+      d.id+' \u00b7 '+d.name+'<small>'+d.tag+'</small></div>';}).join('') : '';
+
+  document.getElementById('main').innerHTML =
+    D==='P'? planHTML() : D==='W'? wagaHTML() : D==='K'? kalkHTML() : D==='J'? dietaHTML() : sessHTML();
+}
 function setW(w){W=w;S.set('rp_w',w).catch(function(){});render();scrollTo(0,0);}
 function setD(d){D=d;S.set('rp_d',d).catch(function(){});render();scrollTo(0,0);}
 const timery={};
@@ -265,18 +306,6 @@ function syncSeria(id,j){
     uwagi:(isT&&ex.tw)?(j===0?'seria T':'po \u221220%'):''}]});
 }
 
-function render(){
-  document.getElementById('weeks').innerHTML=WEEKS.map(w=>
-    '<div class="wk '+(w.type==='dload'?'dl':'')+' '+(w.type==='test'?'tt':'')+' '+(w.id===W?'on':'')+
-    '" onclick="setW(\''+w.id+'\')">'+w.label+'</div>').join('');
-  document.getElementById('days').innerHTML=DAYS.map(d=>
-    '<div class="dy '+(d.id===D?'on':'')+'" onclick="setD(\''+d.id+'\')">'+d.id+' \u00b7 '+d.name+
-    '<small>'+d.tag+'</small></div>').join('')+
-    '<div class="dy '+(D==='W'?'on':'')+'" style="flex:0 0 50px" onclick="setD(\'W\')">Waga<small>pomiar</small></div>'+
-    '<div class="dy '+(D==='K'?'on':'')+'" style="flex:0 0 54px" onclick="setD(\'K\')">Jedzenie<small>makro</small></div>'+
-    '<div class="dy '+(D==='P'?'on':'')+'" style="flex:0 0 50px" onclick="setD(\'P\')">Plan<small>zasady</small></div>';
-  document.getElementById('main').innerHTML = D==='P'? planHTML() : (D==='W'? wagaHTML() : (D==='K'? kalkHTML() : sessHTML()));
-}
 
 
 /* ---- mapa mięśni: ćwiczenie -> podświetlone partie ---- */
@@ -504,17 +533,14 @@ const EXA={
 
 function obrazki(dz,i,nazwa){
   const baza=dz+String(i+1).padStart(2,'0');
-  const idf='ph_'+baza;
   let im='';
   ['','-b','-c'].forEach(function(suf){
-    const id=idf+suf.replace('-','_');
-    im+='<img id="'+id+'" data-src="'+baza+suf+'.png" '+
+    im+='<img data-src="'+baza+suf+'.png" data-baza="'+baza+suf+'" data-krok="0" '+
         'style="width:100%;border-radius:9px;display:block;margin-bottom:6px" '+
-        'data-baza="'+baza+suf+'" data-krok="0" onerror="nastepny(this)">';
+        'onerror="nastepny(this)">';
   });
-  return '<div id="'+idf+'">'+im+'</div>'+anatomia(nazwa);
+  return '<div>'+im+'</div>'+opisyMiesni(nazwa);
 }
-/* próbuje po kolei: .png -> .jpg -> .jpeg -> ukryj */
 function rozwin(el){
   const inf=el.parentNode.querySelector('.info');
   inf.classList.toggle('on');
@@ -524,13 +550,33 @@ function rozwin(el){
     });
   }
 }
+
+/* próbuje po kolei: .png -> .jpg -> .jpeg -> ukryj; jeśli żaden nie wszedł, pokaż schemat */
 function nastepny(el){
-  const b=el.getAttribute('data-baza');
+  const pelna=el.getAttribute('data-baza');
   let k=parseInt(el.getAttribute('data-krok'))+1;
   el.setAttribute('data-krok',k);
-  if(k===1){ el.src=b+'.jpg'; return; }
-  if(k===2){ el.src=b+'.jpeg'; return; }
+  if(k===1){ el.src=pelna+'.jpg';  return; }
+  if(k===2){ el.src=pelna+'.jpeg'; return; }
   el.style.display='none';
+}
+
+function opisyMiesni(nazwa){
+  const lista=EXA[nazwa]; if(!lista) return '';
+  const seen={}; let out='';
+  lista.forEach(function(p){
+    const R=REG[p[0]], akt=p[1]; if(!R) return;
+    R.m.forEach(function(m){
+      if(seen[m[0]]) return; seen[m[0]]=1;
+      const on=akt.indexOf(m[0])>=0;
+      if(!on) return;
+      out+='<div style="display:flex;gap:7px;align-items:flex-start;padding:2.5px 0">'+
+        '<span style="flex:0 0 9px;height:9px;border-radius:2px;margin-top:4px;background:'+AKT+'"></span>'+
+        '<span style="font-size:11.5px;line-height:1.35"><b style="color:#F1F5F9">'+m[1]+'</b>'+
+        '<span style="display:block;color:#64748B;font-size:10.5px">'+m[2]+'</span></span></div>';
+    });
+  });
+  return out?('<div style="background:rgba(15,23,42,.5);border-radius:9px;padding:8px 10px;margin-bottom:6px">'+out+'</div>'):'';
 }
 function anatomia(nazwa){
   const lista=EXA[nazwa]; if(!lista) return '';
@@ -612,10 +658,85 @@ const FOOD={
 };
 /* cele posiłków: [W,B,T] */
 const CELE={
- 'T|Śniadanie (owsianka)':[95,45,30],'T|Szejk potreningowy':[45,25,15],
- 'T|Posiłek przedtreningowy':[75,35,30],'T|Posiłek potreningowy':[80,35,15],'T|Kolacja':[40,35,30],
- 'N|Śniadanie (owsianka)':[68,40,32],'N|Lunch':[55,35,30],'N|Obiad':[55,35,30],'N|Kolacja':[35,35,30]};
+ 'T|Śniadanie (owsianka)':[87,45,30],'T|Szejk potreningowy':[45,25,15],
+ 'T|Posiłek przedtreningowy':[65,35,30],'T|Posiłek potreningowy':[80,35,15],'T|Kolacja':[33,35,30],
+ 'N|Śniadanie (owsianka)':[58,40,32],'N|Lunch':[48,35,30],'N|Obiad':[48,35,30],'N|Kolacja':[33,35,30]};
 let kalk={dzien:'T',posilek:'T|Śniadanie (owsianka)',skl:[]};
+
+
+/* ================= ZAKŁADKA DIETA ================= */
+const POSILKI={
+T:[['Śniadanie — owsianka',87,45,30,0,'płatki 105 g + mleko sojowe 300 ml'],
+   ['Szejk potreningowy',45,25,15,0,'mleko sojowe 300 ml + owoc + odżywka + nasiona'],
+   ['Posiłek przedtreningowy',65,35,30,250,''],
+   ['Posiłek potreningowy',80,35,15,200,'tu wysokie IG — biały ryż, drobna kasza, makaron'],
+   ['Kolacja',33,35,30,200,'najniżej węglowodanowa w dobie — celowo']],
+N:[['Śniadanie — owsianka',58,40,32,0,'płatki 60 g + mleko sojowe 300 ml'],
+   ['Lunch',48,35,30,250,''],
+   ['Obiad',48,35,30,250,''],
+   ['Kolacja',33,35,30,200,'']]};
+const ZBOZA=[['Kasza gryczana / ryż brązowy / quinoa',68,11.2,3.8],['Chleb żytni',48,6,1.5]];
+const STRACZ=49.2, STRACZ_B=22.2;
+const BIALKA=[['Pierś z kurczaka / indyka',23.5,1.25],['Łosoś świeży',20,13],['Łosoś wędzony',20,12],
+  ['Tofu',12,7],['Skyr naturalny',11,0.2],['Twaróg chudy',19,0.5],['Serek wiejski lekki',12,2],
+  ['Odżywka białkowa',80,4],['Jajka (1 żółtko)',0,0]];
+const TLUSZCZE=[['Oliwa',100],['Orzechy pekan',72],['Orzechy włoskie / brazylijskie',65],
+  ['Migdały',50],['Gorzka czekolada 85%',46],['Siemię lniane mielone',42],['Nasiona chia',31],['Awokado',15]];
+let dietaDzien='T';
+
+function dietaHTML(){
+  const r5=v=>Math.round(v/5)*5;
+  let out='<div class="banner"><b>Rozpiska posiłków.</b> Cel w gramach makro, pod spodem ile czego odważyć. '+
+    'Z każdej grupy wybierasz jedno. Wkłady z kaszy i warzyw są już odjęte od porcji białka.</div>'+
+    '<div class="ex"><div class="sets" style="padding:10px"><div class="row" style="grid-template-columns:1fr 1fr">'+
+    '<div class="dy '+(dietaDzien==='T'?'on':'')+'" onclick="dietaD(\'T\')">Treningowy<small>~3230 kcal</small></div>'+
+    '<div class="dy '+(dietaDzien==='N'?'on':'')+'" onclick="dietaD(\'N\')">Nietreningowy<small>~2580 kcal</small></div>'+
+    '</div></div></div>';
+
+  POSILKI[dietaDzien].forEach(function(p){
+    const [nm,W,B,T,wg,uw]=p;
+    const owsianka = nm.indexOf('owsianka')>=0, szejk = nm.indexOf('Szejk')>=0;
+    let body='';
+    if(owsianka||szejk){
+      body='<div class="sub2">Skład</div><table class="mini"><tr><td>'+uw+'</td></tr></table>';
+      const nB = owsianka ? r5(B-(dietaDzien==='T'?13.7:7.8)-9-1) : 15;
+      const nT = owsianka ? r5(T-(dietaDzien==='T'?7.4:4.2)-5.4-1.5) : 10;
+      body+='<div class="sub2">Białko <span class="conv">do dobrania: '+nB+' g</span></div><table class="mini">'+
+        '<tr><td>Odżywka białkowa</td><td class="g">'+r5(nB/0.8)+' g</td></tr>'+
+        '<tr><td>Skyr naturalny</td><td class="g">'+r5(nB/0.11)+' g</td></tr></table>';
+      body+='<div class="sub2">Tłuszcze <span class="conv">do dodania: '+nT+' g</span></div><table class="mini">'+
+        TLUSZCZE.map(f=>'<tr><td>'+f[0]+'</td><td class="g">'+r5(nT/(f[1]/100))+' g</td></tr>').join('')+'</table>';
+    } else {
+      const vB=wg*0.015, vT=wg*0.002;
+      body='<div class="sub2">Węglowodany</div><table class="mini">'+
+        ZBOZA.map(z=>'<tr><td>'+z[0]+'</td><td class="g">'+r5(W/(z[1]/100))+' g</td></tr>').join('')+
+        '<tr><td>Strączki <span class="conv">+ zboża '+r5(Math.max(0,W-50*STRACZ/100)/(0.68))+' g</span></td><td class="g">50 g</td></tr></table>';
+      const gb=ZBOZA[0][2]*r5(W/(ZBOZA[0][1]/100))/100;
+      const need=Math.max(0,r5(B-gb-vB));
+      body+='<div class="sub2">Białko <span class="conv">do dobrania: '+need+' g</span></div><table class="mini">'+
+        BIALKA.map(function(b){
+          if(b[1]===0) return '<tr><td>'+b[0]+'</td><td class="g">'+Math.max(1,Math.round(need/4.3))+' szt.</td></tr>';
+          const pg=r5(need/(b[1]/100)), pf=pg*b[2]/100;
+          return '<tr><td>'+b[0]+(pf>=3?' <span class="star">*</span>':'')+'</td><td class="g">'+pg+' g</td>'+
+                 '<td class="conv">'+(pf>=1?'wnosi '+pf.toFixed(0)+' g T':'')+'</td></tr>';
+        }).join('')+'</table>';
+      const gf=ZBOZA[0][3]*r5(W/(ZBOZA[0][1]/100))/100;
+      const base=Math.max(0,r5(T-gf-vT-1.5));
+      body+='<div class="sub2">Tłuszcze <span class="conv">do dodania: '+base+' g</span></div><table class="mini">'+
+        TLUSZCZE.map(f=>'<tr><td>'+f[0]+'</td><td class="g">'+r5(base/(f[1]/100))+' g</td></tr>').join('')+'</table>'+
+        '<div class="adj">Przy łososiu i tofu odejmij od tłuszczu to, co wnoszą (kolumna obok).</div>';
+    }
+    out+='<div class="ex"><div class="exh" onclick="this.parentNode.querySelector(\'.info\').classList.toggle(\'on\')">'+
+      '<div><h3>'+nm+'</h3><div class="m">'+(wg?'warzywa '+wg+' g':'')+(uw&&!owsianka&&!szejk?' · '+uw:'')+'</div></div>'+
+      '<div class="tgt"><div class="s">'+W+' W</div><div class="r">'+B+' B · '+T+' T</div></div></div>'+
+      '<div class="info on">'+body+'</div></div>';
+  });
+  out+='<div class="legend">Warzywa: zielone liściaste codziennie (szpinak, jarmuż, rukola 100 g), kapustne 4–5× w tygodniu (brokuł, kalafior 200 g), '+
+    'reszta bez limitu (pomidory, cukinia, pieczarki 250 g). Marchewka do 100 g nie liczy się do węgli — powyżej odejmij 10 g kaszy za każde 100 g.</div>';
+  return out;
+}
+function dietaD(v){ dietaDzien=v; render(); }
+
 
 function kalkHTML(){
   const cel=CELE[kalk.posilek]||[0,0,0];
@@ -811,12 +932,19 @@ document.addEventListener('visibilitychange',()=>{ if(!document.hidden) dr(); })
 (async function(){
   await S.init();
   if(S.mode!=='none'){
-    const l=await S.get('rp_log'); if(l){try{log=JSON.parse(l);}catch(e){}}
+    const l=await S.get('rp_log');   if(l){try{log=JSON.parse(l);}catch(e){}}
+    const g=await S.get('rp_waga');  if(g){try{waga=JSON.parse(g);}catch(e){}}
+    const q=await S.get('rp_queue'); if(q){try{kolejka=JSON.parse(q);}catch(e){}}
+    const kk=await S.get('rp_kalk'); if(kk){try{kalk=JSON.parse(kk);}catch(e){}}
     const w=await S.get('rp_w'); if(w)W=w;
     const d=await S.get('rp_d'); if(d)D=d;
+    const tt=await S.get('rp_timer');
+    if(tt && +tt>Date.now()){ koniec=+tt; tm=setInterval(dr,250); }
   }
   render();
-  if(S.mode==='none') pill('BRAK ZAPISU','err');
+  if(S.mode==='none'){ pill('BRAK ZAPISU','err'); return; }
+  wyslij();
+  pobierzZArkusza();
 })();
 </script>
 </body>
