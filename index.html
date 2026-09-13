@@ -142,41 +142,41 @@ textarea{width:100%;height:110px;margin-top:8px;padding:9px;border-radius:9px;bo
 <script>
 const PLAN={
   A: [
-    { n: "Wyciskanie sztangi poziomo", m: "Klatka środek · triceps", s: [4,4,5,5], r: "5–8", p: 1, warm: 1, rest: "3–4 min", pair: 0, tw: "87,5", tw2: "70", w: "Ciężkie złożone — zawsze solo, pełna przerwa." },
-    { n: "Wyciskanie hantli skośne 30°", m: "Klatka góra", s: [3,4,4,5], r: "8–12", p: 1, rest: "2–3 min", pair: 2, tw: "34", tw2: "27", w: "Twoja najsłabsza część klatki — stąd wysoka pozycja w sesji." },
-    { n: "Wiosłowanie sztangą w opadzie", m: "Środek pleców", s: [3,3,3,3], r: "8–12", rest: "2–3 min", pair: 2, tw: "50", tw2: "40", w: "Podtrzymanie. Po resecie techniki zacznij ostrożnie." },
-    { n: "Ściąganie uchwytu z góry jednorącz", m: "Najszerszy (bok pleców)", s: [3,3,3,3], r: "10–15", rest: "90–120 s", pair: 3, tw: "37,5", tw2: "30", w: "Na hammerze, siedząco, nachwytem." },
-    { n: "Prostowanie ramion zza głowy", m: "Triceps — głowa długa", s: [4,5,5,6], r: "10–15", p: 1, rest: "90–120 s", pair: 3, tw: "35", tw2: "28", w: "Zza głowy, bo tylko wtedy głowa długa jest w pełnym rozciągnięciu." },
-    { n: "Scarecrows", m: "Bark tylny · rotatory", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 4, tw: "3", tw2: "2,5", w: "Ławka 60°, klatką na oparciu. Ciężar celowo mały — to stożek rotatorów." },
-    { n: "Uginanie przedramion sztangą prostą", m: "Biceps", s: [2,2,2,2], r: "8–12", rest: "60–90 s", pair: 4, tw: "32", tw2: "25,5", w: "Prosta, nie łamana — jedyny ruch w pełnej supinacji w tym bloku." },
-    { n: "Wznosy bokiem na wyciągu", m: "Bark boczny", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 0, tw: "12", tw2: "9,5" },
+    { n: "Wyciskanie sztangi poziomo", m: "Klatka środek · triceps", s: [4,4,5,5], r: "5–8", p: 1, warm: 1, rest: "3–4 min", pair: 0, tw: "82,5", tw2: "70", t1: "82,5", w: "Oburącz. Ławka pozioma, łopatki ściągnięte i schowane w dół, pośladki zostają na ławce, stopy płasko pod kolanami. Chwyt ok. 1,5× szerokości barków, sztanga schodzi do dolnej części klatki, łokcie 45–60° od tułowia (nie na boki). Ciężkie złożone — zawsze solo, pełna przerwa." },
+    { n: "Wyciskanie hantli skośne 30°", m: "Klatka góra", s: [3,4,4,5], r: "8–12", p: 1, rest: "2–3 min", pair: 2, tw: "34", tw2: "27", t1: "24", w: "Oburącz, obie ręce jednocześnie. Oparcie dokładnie 30° — powyżej 45° ruch przejmuje bark przedni i tracisz sens ćwiczenia. Łopatki ściągnięte, hantle schodzą po bokach klatki do linii sutków, na dole szukasz rozciągnięcia. U góry nie stykaj hantli — napięcie ucieka. W teście 34 kg dało 2 powtórzenia, stąd duży zjazd." },
+    { n: "Wiosłowanie sztangą w opadzie", m: "Środek pleców", s: [3,3,3,3], r: "8–12", rest: "2–3 min", pair: 2, tw: "50", tw2: "40", t1: "45", w: "Oburącz. Tułów 30–45° do podłoża, kolana lekko ugięte, plecy neutralne z wypiętą klatką. Chwyt nachwytem na szerokość barków, sztangę ciągniesz do dolnych żeber, łokcie blisko tułowia. Tułów nieruchomy — jak zaczynasz bujać, ciężar jest za duży." },
+    { n: "Ściąganie uchwytu z góry jednorącz", m: "Najszerszy (bok pleców)", s: [3,3,3,3], r: "10–15", rest: "90–120 s", pair: 3, tw: "37,5", tw2: "30", t1: "30", w: "Unilateralnie — jedna ręka naraz, siedząc na hammerze, nachwytem. Na starcie pozwól łopatce wyjechać w górę (pełne rozciągnięcie najszerszego), potem ściągnij ją w dół i do tyłu, łokieć prowadź do biodra. Wolną ręką trzymaj się siedziska, tułów bez rotacji i bez odchylania." },
+    { n: "Prostowanie ramion zza głowy", m: "Triceps — głowa długa", s: [4,5,5,6], r: "10–15", p: 1, rest: "90–120 s", pair: 3, tw: "35", tw2: "28", t1: "28", w: "Oburącz, jedna lina, twarzą od wyciągu, tułów pochylony w przód, ramiona przy uszach. Łokcie nieruchome przez cały ruch — zgina się tylko łokieć. Zza głowy, bo tylko wtedy głowa długa jest w pełnym rozciągnięciu." },
+    { n: "Scarecrows", m: "Bark tylny · rotatory", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 4, tw: "3", tw2: "2,5", t1: "2", w: "Oburącz jednocześnie. Ławka 45–60°, klatką na oparciu, ręce zwisają swobodnie. Ruch 1: przyciągasz łokcie do góry i wypinasz klatkę. Ruch 2: rotacja zewnętrzna — obracasz przedramiona do góry. Wracając możesz zaokrąglić górę pleców i rozciągnąć tył barku. Ciężar celowo mały — to stożek rotatorów, nie siłowanie." },
+    { n: "Uginanie przedramion sztangą prostą", m: "Biceps", s: [2,2,2,2], r: "8–12", rest: "60–90 s", pair: 4, tw: "32", tw2: "25,5", t1: "27,5", w: "Oburącz, stojąc. Prosta sztanga, nie łamana — to jedyny ruch w pełnej supinacji w tym bloku. Chwyt na szerokość barków, łokcie przy tułowiu i nieruchome, tułów bez odchylania się do tyłu." },
+    { n: "Wznosy bokiem na wyciągu", m: "Bark boczny", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 0, tw: "12", tw2: "9,5", t1: "10", w: "Unilateralnie — jedna ręka naraz. Stoisz bokiem do stosu, dolny wyciąg, linka przechodzi przed ciałem. Prowadzisz łokciem, nie dłonią; łokieć lekko ugięty i wyżej niż nadgarstek. Zatrzymujesz się na linii barku, bez zamachu biodrami." },
   ],
   B: [
-    { n: "Przysiad ze sztangą na barkach", m: "Czworogłowe · pośladki", s: [4,4,4,4], r: "6–10", warm: 1, rest: "3–4 min", pair: 0, tw: "65", tw2: "52" },
-    { n: "Wypychanie bioder ze sztangą", m: "Pośladkowy wielki", s: [4,5,5,6], r: "8–12", p: 1, rest: "2–3 min", pair: 0, tw: "70", tw2: "56", w: "Obunóż — limitem ma być pośladek, nie stabilizacja." },
-    { n: "Martwy ciąg rumuński", m: "Dwugłowe uda · pośladki", s: [3,3,3,3], r: "8–12", rest: "2–3 min", pair: 2, tw: "110", tw2: "88" },
-    { n: "Wspięcia na łydki stojąc", m: "Brzuchaty łydki", s: [3,3,4,4], r: "10–15", rest: "60–90 s", pair: 2, tw: "70", tw2: "56", w: "Kolano proste = brzuchaty." },
-    { n: "Uginanie podudzi leżąc", m: "Dwugłowe uda — obunóż", s: [3,3,3,3], r: "10–15", rest: "90–120 s", pair: 3, tw: "40", tw2: "32", w: "Obunóż. Ciężar z Twojego tygodnia testowego, nie z szacunku." },
-    { n: "Przyciąganie kolan w zwisie", m: "Brzuch dolny", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 3, tw: null, tw2: null },
+    { n: "Przysiad ze sztangą na barkach", m: "Czworogłowe · pośladki", s: [4,4,4,4], r: "6–10", warm: 1, rest: "3–4 min", pair: 0, tw: "70", tw2: "52", t1: "65", w: "Obunóż. Sztanga wysoko na kapturach (high bar), stopy na szerokość barków lub odrobinę szerzej, palce 15–30° na zewnątrz, kolana śledzą linię stóp. Schodzisz co najmniej do równoległości ud. Solo, pełna przerwa." },
+    { n: "Wypychanie bioder ze sztangą", m: "Pośladkowy wielki", s: [4,5,5,6], r: "8–12", p: 1, rest: "2–3 min", pair: 0, tw: "70", tw2: "56", t1: "70", w: "Obunóż — świadomie, bo przy jednonóż limitem była stabilizacja, nie pośladek. Łopatki oparte o krawędź ławki ok. 40 cm, stopy tak daleko, żeby na górze podudzie stało pionowo. Broda schowana, żebra w dół, na szczycie pełny wyprost bioder i sekunda spięcia." },
+    { n: "Martwy ciąg rumuński", m: "Dwugłowe uda · pośladki", s: [3,3,3,3], r: "8–12", rest: "2–3 min", pair: 2, tw: "90", tw2: "72,5", t1: "75", w: "Oburącz, start z góry. Kolana lekko ugięte i przez cały ruch nieruchome, biodra jadą do tyłu, sztanga sunie po udach. Schodzisz do momentu, w którym plecy zaczynają się zaokrąglać — u większości tuż poniżej kolan. Ruch dzieje się w biodrze, nie w kręgosłupie." },
+    { n: "Wspięcia na łydki stojąc", m: "Brzuchaty łydki", s: [3,3,4,4], r: "10–15", rest: "60–90 s", pair: 2, tw: "70", tw2: "56", t1: "60", w: "Obunóż. Kolano proste przez cały ruch — to warunek, żeby pracował brzuchaty. Śródstopie na krawędzi podestu, pięta schodzi maksymalnie nisko z sekundą pauzy, w górę pełne wspięcie bez odbijania." },
+    { n: "Uginanie podudzi leżąc", m: "Dwugłowe uda — obunóż", s: [3,3,3,3], r: "10–15", rest: "90–120 s", pair: 3, tw: "40", tw2: "31,5", t1: "32,5", w: "Obunóż — tak jak robiłeś w teście, plan zakładał błędnie jednonóż. Biodra dociśnięte do ławki, oś maszyny na wysokości kolana, wałek nad ścięgnem Achillesa, palce ściągnięte do siebie. Nie odrywaj bioder na końcu ruchu." },
+    { n: "Przyciąganie kolan w zwisie", m: "Brzuch dolny", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 3, tw: null, tw2: null, t1: null, w: "Obunóż, zwis na drążku. Kolana mocno ugięte. Ruch zaczyna się od podwinięcia miednicy — ogon do żeber — a dopiero potem jedzie biodro. Bez rozbujania: jeśli się bujasz, pracuje zginacz biodra, nie brzuch. W teście wyszło 6 powtórzeń, celuj w dojście do 12 w tygodniu 3–4." },
   ],
   C: [
-    { n: "Pompki na poręczach z obciążeniem", m: "Klatka dół · triceps", s: [3,4,4,5], r: "8–12", p: 1, warm: 1, rest: "2–3 min", pair: 0, tw: "+25", tw2: "+20" },
-    { n: "Wyciskanie hantli poziomo", m: "Klatka środek", s: [3,3,4,4], r: "10–15", p: 1, rest: "2–3 min", pair: 2, tw: "32", tw2: "25,5", w: "Hantle = większy zakres niż sztanga. Inny bodziec, nie powtórka z dnia A." },
-    { n: "Podciąganie nachwytem", m: "Najszerszy · biceps", s: [3,3,3,3], r: "6–10", rest: "2–3 min", pair: 2, tw: "+7,5", tw2: "+6" },
-    { n: "Rozpiętki na bramie", m: "Klatka — rozciągnięcie", s: [3,3,4,4], r: "12–20", p: 1, rest: "90–120 s", pair: 3, tw: "40", tw2: "32", w: "Jedyny ruch obciążający klatkę w pełnym rozciągnięciu." },
-    { n: "Wiosłowanie hantlem jednorącz", m: "Najszerszy · środek pleców", s: [3,3,3,3], r: "10–15", rest: "90–120 s", pair: 3, tw: "19", tw2: "15" },
-    { n: "Prostowanie ramion na wyciągu", m: "Triceps — głowa boczna", s: [4,5,6,6], r: "10–15", p: 1, rest: "60–90 s", pair: 4, tw: "35", tw2: "28" },
-    { n: "Wznosy bokiem z hantlami", m: "Bark boczny", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 4, tw: "10", tw2: "8" },
-    { n: "Zottman curl", m: "Biceps · ramienno-promieniowy", s: [2,2,2,2], r: "10–15", rest: "60–90 s", pair: 0, tw: "12", tw2: "9,5" },
+    { n: "Pompki na poręczach z obciążeniem", m: "Klatka dół · triceps", s: [3,4,4,5], r: "8–12", p: 1, warm: 1, rest: "2–3 min", pair: 0, tw: "+25", tw2: "+20", t1: "+7,5", w: "Oburącz, obciążenie na pasie. Tułów pochylony 20–30° w przód — w pionie ćwiczenie robi się tricepsowe, pochylenie przesuwa je na dolną klatkę. Łokcie lekko na zewnątrz, schodzisz do kąta prostego w łokciu lub głębiej, jeśli bark na to pozwala bez bólu." },
+    { n: "Wyciskanie hantli poziomo", m: "Klatka środek", s: [3,3,4,4], r: "10–15", p: 1, rest: "2–3 min", pair: 2, tw: "32", tw2: "26", t1: "26", w: "Oburącz jednocześnie. Ławka pozioma, łopatki ściągnięte. Sens tego ćwiczenia to zakres — hantle schodzą niżej, niż pozwoliłaby sztanga, więc nie skracaj dołu. U góry nie stykaj hantli. Inny bodziec niż dzień A, nie powtórka." },
+    { n: "Podciąganie nachwytem", m: "Najszerszy · biceps", s: [3,3,3,3], r: "6–10", rest: "2–3 min", pair: 2, tw: "+7,5", tw2: "+6", t1: "+7,5", w: "Oburącz, obciążenie na pasie. Chwyt nachwytem ok. 1,5× szerokości barków. Na dole pełny zwis z łopatkami wyjeżdżającymi w górę, na górze broda nad drążkiem i klatka prowadzona do drążka. Bez kipowania nogami." },
+    { n: "Rozpiętki na bramie", m: "Klatka — rozciągnięcie", s: [3,3,4,4], r: "12–20", p: 1, rest: "90–120 s", pair: 3, tw: "40", tw2: "30", t1: "25", w: "Oburącz jednocześnie, stojąc na bramie, wyciągi wysoko. Wykrok jedną nogą, tułów ok. 15° w przód, łokcie lekko ugięte i przez cały ruch sztywne. Ręce prowadzisz łukiem w dół i do środka, na końcu lekkie skrzyżowanie. Jedyny ruch obciążający klatkę w pełnym rozciągnięciu — wybierz wersję stojącą i trzymaj ją przez cały blok, żeby ciężary były porównywalne." },
+    { n: "Wiosłowanie hantlem jednorącz", m: "Najszerszy · środek pleców", s: [3,3,3,3], r: "10–15", rest: "90–120 s", pair: 3, tw: "20", tw2: "16", t1: "16", w: "Unilateralnie. Kolano i dłoń przeciwnej ręki na ławce, plecy równolegle do podłogi i neutralne. Hantel ciągniesz do biodra, łokieć blisko tułowia; na dole pozwól łopatce wyjechać w przód. Tułów bez rotacji — nie odkręcaj się, żeby dociągnąć." },
+    { n: "Prostowanie ramion na wyciągu", m: "Triceps — głowa boczna", s: [4,5,6,6], r: "10–15", p: 1, rest: "60–90 s", pair: 4, tw: "35", tw2: "30", t1: "30", w: "Oburącz, wyciąg górny, prosty drążek albo V — nie lina. Łokcie przyklejone do tułowia i nieruchome, tułów pionowo lub minimalnie pochylony, pełny wyprost na dole z krótkim spięciem." },
+    { n: "Wznosy bokiem z hantlami", m: "Bark boczny", s: [3,3,3,3], r: "12–20", rest: "60–90 s", pair: 4, tw: "10", tw2: "8", t1: "7", w: "Oburącz jednocześnie — unilateralnie tylko wtedy, gdy chcesz się o coś oprzeć. Stojąc, tułów minimalnie w przód, łokcie lekko ugięte, prowadzisz łokciem do linii barku i nie wyżej. Bez zamachu biodrami." },
+    { n: "Zottman curl", m: "Biceps · ramienno-promieniowy", s: [2,2,2,2], r: "10–15", rest: "60–90 s", pair: 0, tw: "12", tw2: "9", t1: "8", w: "Oburącz jednocześnie. W górę podnosisz supinując (dłonie do góry), na szczycie obracasz dłonie w nawrót i opuszczasz powoli nachwytem — cała wartość tego ćwiczenia jest w tej wolnej ekscentryce. Łokcie przy tułowiu." },
   ],
   D: [
-    { n: "Martwy ciąg staggered / trap bar", m: "Cały tył ciała", s: [4,4,4,4], r: "5–8", warm: 1, rest: "3–5 min", pair: 0, tw: "85", tw2: "68" },
-    { n: "Wykroki do tyłu z podwyższenia", m: "Czworogłowe · pośladki", s: [3,3,3,3], r: "8–12/nogę", rest: "2–3 min", pair: 2, tw: "32", tw2: "25,5" },
-    { n: "Wspięcia na łydki siedząc", m: "Płaszczkowaty", s: [3,3,4,4], r: "12–20", rest: "60–90 s", pair: 2, tw: "120", tw2: "96", w: "Kolano zgięte = płaszczkowaty." },
-    { n: "Odwodzenie w biodrze (maszyna)", m: "Pośladek średni", s: [3,4,4,5], r: "15–20", p: 1, rest: "60–90 s", pair: 3, tw: null, tw2: null, w: "Nowe ćwiczenie — znajdź ciężar na 20 powtórzeń." },
-    { n: "Wyciskanie nóg na suwnicy", m: "Czworogłowe", s: [3,3,3,3], r: "10–15", rest: "2–3 min", pair: 3, tw: "115", tw2: "92" },
-    { n: "Prostowanie podudzi siedząc", m: "Czworogłowe (izolacja)", s: [2,2,2,2], r: "12–20", rest: "60–90 s", pair: 4, tw: "30", tw2: "24" },
-    { n: "Spięcia brzucha na piłce", m: "Brzuch górny", s: [3,3,3,3], r: "15–20", rest: "60–90 s", pair: 4, tw: "15", tw2: "12" },
+    { n: "Martwy ciąg staggered / trap bar", m: "Cały tył ciała", s: [4,4,4,4], r: "5–8", warm: 1, rest: "3–5 min", pair: 0, tw: "86", tw2: "68,5", t1: "105", w: "Obunóż, trap bar, uchwyty neutralne. Stopy na szerokość bioder, biodra niżej niż w klasycznym martwym, klatka wypięta, ruch zaczynasz od wypchnięcia podłogi nogami. Każde powtórzenie z resetem na podłodze. W teście 86 kg dało 15 powtórzeń przy celu 5–8 — stąd duży skok w górę." },
+    { n: "Wykroki do tyłu z podwyższenia", m: "Czworogłowe · pośladki", s: [3,3,3,3], r: "8–12/nogę", rest: "2–3 min", pair: 2, tw: "32", tw2: "25", t1: "24", w: "Unilateralnie — powtórzenia liczysz na jedną nogę. Sztanga na plecach (zostań przy niej: hantle przy podwyższeniu obijałyby się o podest). Przednia stopa na podeście 10–15 cm, krok w tył, tylne kolano schodzi poniżej poziomu przedniej stopy. Tułów pionowo = więcej czworogłowego, pochylony = więcej pośladka." },
+    { n: "Wspięcia na łydki siedząc", m: "Płaszczkowaty", s: [3,3,4,4], r: "12–20", rest: "60–90 s", pair: 2, tw: "50", tw2: "40", t1: "30", w: "Obunóż. Kolano zgięte do 90° — dopiero wtedy pracuje płaszczkowaty. Wałek nad kolanem, blisko stawu, śródstopie na krawędzi podestu. Pełne opuszczenie pięty z sekundą pauzy na dole." },
+    { n: "Odwodzenie w biodrze (maszyna)", m: "Pośladek średni", s: [3,4,4,5], r: "15–20", p: 1, rest: "60–90 s", pair: 3, tw: "30", tw2: "25", t1: "20", w: "Obunóż — maszyna rozchyla obie nogi naraz. Siedząc, tułów pochylony 10–20° w przód: w pionie pracuje głównie napinacz powięzi szerokiej, dopiero pochylenie przesuwa robotę na pośladek średni. Plecy proste, bez odchylania się do tyłu na oparcie." },
+    { n: "Wyciskanie nóg na suwnicy", m: "Czworogłowe", s: [3,3,3,3], r: "10–15", rest: "2–3 min", pair: 3, tw: "115", tw2: "90", t1: "90", w: "Obunóż. Stopy na środku platformy, szerokość barków, palce lekko na zewnątrz. Oparcie ustaw tak, żeby na dole miednica nie odrywała się od siedziska — to jedyne kryterium głębokości. U góry nie prostuj kolan do blokady." },
+    { n: "Prostowanie podudzi siedząc", m: "Czworogłowe (izolacja)", s: [2,2,2,2], r: "12–20", rest: "60–90 s", pair: 4, tw: "34,5", tw2: "29,5", t1: "30", w: "Obunóż. Oś maszyny na wysokości kolana, oparcie dosunięte tak, żeby kolano wypadało na krawędzi siedziska. Pełny wyprost z sekundą spięcia u góry, opuszczanie kontrolowane." },
+    { n: "Spięcia brzucha z obciążeniem", m: "Brzuch górny", s: [3,3,3,3], r: "15–20", rest: "60–90 s", pair: 4, tw: "10", tw2: "7,25", t1: "10", w: "Twoja wersja zamiast piłki: leżąc, nogi rozłożone na boki (stopy razem), talerz trzymany na klatce. Zginasz tułów — żebra do miednicy — a dół pleców zostaje na podłodze. Nie unosisz całego tułowia, bo wtedy pracuje zginacz biodra." },
   ],
 };
 
@@ -386,7 +386,7 @@ const MM={
 'Odwodzenie w biodrze (maszyna)':['poslS'],
 'Wyciskanie nóg na suwnicy':['czwor','posl'],
 'Prostowanie podudzi siedząc':['czwor'],
-'Spięcia brzucha na piłce':['brzuch']};
+'Spięcia brzucha z obciążeniem':['brzuch']};
 
 function sylwetka(akt){
   const on=k=>akt.indexOf(k)>=0?'#3B82F6':'#334155';
@@ -576,7 +576,7 @@ const EXA={
 'Odwodzenie w biodrze (maszyna)':[['udoT',['poslS']]],
 'Wyciskanie nóg na suwnicy':[['udoP',['prosty','bocz','przysr']]],
 'Prostowanie podudzi siedząc':[['udoP',['prosty','bocz','przysr']]],
-'Spięcia brzucha na piłce':[['brzuch',['prostyB']]]
+'Spięcia brzucha z obciążeniem':[['brzuch',['prostyB']]]
 };
 
 function obrazki(dz,i,nazwa){
@@ -656,7 +656,7 @@ function sessHTML(){
     for(let j=0;j<ns;j++){
       const d=(log[id]||{})[j]||{};
       const tag = isT&&ex.tw ? (j===0?'T':'\u221220') : (j+1);
-      const ph  = isT&&ex.tw ? (j===0?ex.tw:ex.tw2) : 'kg';
+      const ph  = isT&&ex.tw ? (j===0?ex.tw:ex.tw2) : (W==='1'&&ex.t1 ? ex.t1 : 'kg');
       rows+='<div class="row"><span class="i">'+tag+'</span>'+
         '<input inputmode="decimal" placeholder="'+ph+'" value="'+(d.kg||'')+'" oninput="upd(\''+id+'\','+j+',\'kg\',this.value)">'+
         '<input inputmode="numeric" placeholder="powt" value="'+(d.rp||'')+'" oninput="upd(\''+id+'\','+j+',\'rp\',this.value)"></div>';
@@ -673,7 +673,8 @@ function sessHTML(){
       '<span class="badge '+(ex.pair?PC[ex.pair]:'b0')+'">'+(ex.pair?('superseria '+D+ex.pair):'solo')+'</span>'+
       '<div class="rest">przerwa: <b>'+(ex.pair?('0\u201330 s w parze, '+ex.rest+' po parze'):ex.rest)+'</b></div></div>'+
       '<div class="tgt"><div class="s">'+(isT&&ex.tw?ex.tw+' kg':ns+'\u00d7')+'</div>'+
-      '<div class="r">'+(isT&&ex.tw?'potem '+ex.tw2+' kg':ex.r+' powt.')+'</div></div></div>'+
+      '<div class="r">'+(isT&&ex.tw?'potem '+ex.tw2+' kg':ex.r+' powt.')+'</div>'+
+      ((W==='1'&&ex.t1)?'<div class="r" style="color:var(--acc)">start '+ex.t1+' kg</div>':'')+'</div></div>'+
       '<div class="info">'+obrazki(D,i,ex.n)+(ex.w?'<div class="lead">'+ex.w+'</div>':'')+
       '<div class="warm">'+(ex.warm?'<b>Rozgrzewka 12-8-4:</b> 12 powt. ~50% ci\u0119\u017caru roboczego \u2192 8 powt. ~70% \u2192 4 powt. ~85%. Serii rozgrzewkowych nie zapisujesz.':'Rozgrzewka: 1 lekka seria wystarczy.')+'</div></div>'+
       '<div class="sets"><div class="lbl"><span></span><span>ci\u0119\u017car</span><span>powt.</span></div>'+rows+prev+
