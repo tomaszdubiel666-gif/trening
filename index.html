@@ -36,6 +36,8 @@ header{position:sticky;top:0;z-index:20;background:rgba(7,11,24,.78);backdrop-fi
 .weeks::-webkit-scrollbar{display:none}
 .wk{flex:0 0 auto;padding:6px 12px;border-radius:20px;background:var(--card);border:1px solid var(--line);
     font-size:12px;font-family:"Space Mono",monospace;color:var(--soft);cursor:pointer;white-space:nowrap}
+.wk.mz{font-weight:700}
+#weeks .sep{flex:0 0 1px;background:var(--line);margin:4px 2px}
 .wk.on{background:var(--grad);border-color:transparent;color:#08101F;font-weight:700}
 .wk.dl.on{background:var(--ok);border-color:var(--ok);color:#08101F}
 .wk.tt.on{background:var(--warn);border-color:var(--warn);color:#08101F}
@@ -182,11 +184,10 @@ const PLAN={
   ],
 };
 
-const WEEKS=[{id:'t',label:'Test',type:'test'},{id:'1',label:'Tydz. 1',type:'acc',rir:'3\u20134'},
- {id:'2',label:'Tydz. 2',type:'acc',rir:'2\u20133'},{id:'3',label:'Tydz. 3',type:'acc',rir:'1\u20132'},
- {id:'4',label:'Tydz. 4',type:'acc',rir:'0\u20131'},{id:'d',label:'Deload',type:'dload',rir:'4\u20135'}];
-const DAYS=[{id:'A',name:'G\u00f3ra',tag:'klatka ci\u0119\u017cka'},{id:'B',name:'D\u00f3\u0142',tag:'po\u015bladki'},
- {id:'C',name:'G\u00f3ra',tag:'klatka obj.'},{id:'D',name:'D\u00f3\u0142',tag:'nogi'}];
+const WEEKS=[{id:'t',label:'T0',sl:'Test',type:'test'},{id:'1',label:'T1',sl:'Tydz. 1',type:'acc',rir:'3\u20134'},
+ {id:'2',label:'T2',sl:'Tydz. 2',type:'acc',rir:'2\u20133'},{id:'3',label:'T3',sl:'Tydz. 3',type:'acc',rir:'1\u20132'},
+ {id:'4',label:'T4',sl:'Tydz. 4',type:'acc',rir:'0\u20131'},{id:'d',label:'DL',sl:'Deload',type:'dload',rir:'4\u20135'}];
+const DAYS=[{id:'A'},{id:'B'},{id:'C'},{id:'D'}];
 const PC={2:'b2',3:'b3',4:'b4'};
 
 /* Warstwa zapisu: najpierw mechanizm Claude, potem pamiec przegladarki */
@@ -207,7 +208,66 @@ const S={mode:'none',
   if(this.mode==='local'){localStorage.setItem(k,v);return;}
   throw new Error('brak zapisu');}
 };
-let W='1', D='A', log={}, waga={}, kolejka=[];
+let W='1', D='A', M='1', log={}, waga={}, kolejka=[];
+/* --- mezocykle: M1 = klucze bez prefiksu (stare dane), M2+ = 'M-W' --- */
+const MEZO=['1','2'];
+function wkKey(w,m){m=m||M; return m==='1'?w:(m+'-'+w);}
+function wkInfo(k){
+  const p=String(k).split('-'), m=p.length>1?p[0]:'1', w=p.length>1?p[1]:p[0];
+  const e=WEEKS.find(x=>x.id===w)||{};
+  return {m:m,w:w,rir:e.rir||'',type:e.type,label:e.label,sl:(m==='1'?e.sl:('M'+m+' '+e.sl))};
+}
+function slToKey(sl){
+  const e=WEEKS.find(x=>x.sl===sl); if(e) return e.id;
+  const r=/^M(\d+) (.+)$/.exec(String(sl)||''); if(!r) return null;
+  const e2=WEEKS.find(x=>x.sl===r[2]); return e2?wkKey(e2.id,r[1]):null;
+}
+/* deload M1: ~60% ciężaru z T4 (z arkusza, 10.2026) */
+const DLW1={"Wyciskanie sztangi poziomo":"50","Wyciskanie hantli skośne 30°":"14","Wiosłowanie sztangą w opadzie":"30",
+ "Ściąganie uchwytu z góry jednorącz":"18","Prostowanie ramion zza głowy":"18","Scarecrows":"0,5",
+ "Uginanie przedramion sztangą prostą":"17,5","Wznosy bokiem z hantlem":"5",
+ "Przysiad ze sztangą na barkach":"40","Wypychanie bioder ze sztangą":"42,5","Martwy ciąg rumuński":"45",
+ "Wspięcia na łydki stojąc":"35","Uginanie podudzi leżąc":"20","Przyciąganie kolan w zwisie":"0",
+ "Pompki na poręczach z obciążeniem":"0","Wyciskanie hantli poziomo":"16","Podciąganie nachwytem":"0",
+ "Rozpiętki z hantlami":"5","Wiosłowanie hantlem jednorącz":"10","Prostowanie ramion na wyciągu":"25",
+ "Wznosy bokiem z hantlami":"4","Zottman curl":"5",
+ "Martwy ciąg staggered / trap bar":"65","Wykroki do tyłu z podwyższenia":"12,5","Wspięcia na łydki siedząc":"17,5",
+ "Odwodzenie w biodrze (maszyna)":"12","Wyciskanie nóg na suwnicy":"55","Prostowanie podudzi siedząc":"20",
+ "Spięcia brzucha z obciążeniem":"0"};
+/* start M2 T1 — po analizie T4 M1 */
+const START2={"Wyciskanie sztangi poziomo":"85","Wyciskanie hantli skośne 30°":"26","Wiosłowanie sztangą w opadzie":"50",
+ "Ściąganie uchwytu z góry jednorącz":"30","Prostowanie ramion zza głowy":"30","Scarecrows":"0,5",
+ "Uginanie przedramion sztangą prostą":"27,5","Wznosy bokiem z hantlem":"9",
+ "Przysiad ze sztangą na barkach":"67,5","Wypychanie bioder ze sztangą":"70","Martwy ciąg rumuński":"75",
+ "Wspięcia na łydki stojąc":"60","Uginanie podudzi leżąc":"33","Przyciąganie kolan w zwisie":null,
+ "Pompki na poręczach z obciążeniem":"+10","Wyciskanie hantli poziomo":"26","Podciąganie nachwytem":"+7,5",
+ "Rozpiętki z hantlami":"10","Wiosłowanie hantlem jednorącz":"16","Prostowanie ramion na wyciągu":"40",
+ "Wznosy bokiem z hantlami":"8","Zottman curl":"9",
+ "Martwy ciąg staggered / trap bar":"112,5","Wykroki do tyłu z podwyższenia":"22,5","Wspięcia na łydki siedząc":"32,5",
+ "Odwodzenie w biodrze (maszyna)":"20","Wyciskanie nóg na suwnicy":"90","Prostowanie podudzi siedząc":"37,5",
+ "Spięcia brzucha z obciążeniem":"2,5"};
+function num(v){return parseFloat(String(v||'').replace('+','').replace(',','.'));}
+function fmt(x){return String(x).replace('.',',');}
+function firstKg(key,D_,i){const p=log[key+'_'+D_+'_'+i]; if(!p) return null;
+  const f=Object.keys(p).filter(k=>!isNaN(+k)).sort((a,b)=>a-b).map(k=>p[k]).find(x=>x&&x.kg); return f?f.kg:null;}
+function dlWeight(ex,i){
+  if(M==='1') return DLW1[ex.n]||null;
+  const k=firstKg(wkKey('4'),D,i); if(k===null) return null;
+  const v=num(k); if(isNaN(v)) return null; if(String(k).trim().startsWith('+')) return '0';
+  const r=v>=20?Math.round(v*0.6/2.5)*2.5:Math.round(v*0.6); return fmt(r);
+}
+function startWeight(ex,i){
+  if(M==='1') return ex.t1||null;
+  if(M==='2' && (ex.n in START2)) return START2[ex.n];
+  return firstKg(wkKey('4',String(+M-1)),D,i);
+}
+function prevKey(){
+  if(W==='d') return wkKey('4');
+  const n=parseInt(W); if(isNaN(n)) return null;
+  if(n>1) return wkKey(String(n-1));
+  if(M!=='1') return wkKey('4',String(+M-1));
+  return null;
+}
 const ENDPOINT='https://script.google.com/macros/s/AKfycbylgrHYXhqqLJwxKGD7VhpEMdjf-TrDMMFnQfF8qREdr44vnPQOXbcsD-fbdOr8VqFZ/exec';
 const dzis=()=>new Date().toISOString().slice(0,10);
 
@@ -245,7 +305,7 @@ async function pobierzZArkusza(){
     if(!j.ok) throw 0;
     let n=0;
     (j.trening||[]).forEach(row=>{
-      const wk=(WEEKS.find(x=>x.label===row.tydzien)||{}).id; if(!wk) return;
+      const wk=slToKey(row.tydzien); if(!wk) return;
       const dz=row.dzien; if(!PLAN[dz]) return;
       const i=PLAN[dz].findIndex(e=>e.n===row.cwiczenie); if(i<0) return;
       const j2=parseInt(row.seria)-1; if(isNaN(j2)||j2<0) return;
@@ -265,7 +325,8 @@ async function pobierzZArkusza(){
     await S.set('rp_log',JSON.stringify(log));
     await S.set('rp_waga',JSON.stringify(waga));
     pill(n?('odtworzono '+n):'aktualne','ok');
-    render();
+    const ae=document.activeElement;
+    if(n>0 && !(ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName))) render();
   }catch(e){ pill('brak pobrania','warn'); }
 }
 
@@ -281,9 +342,9 @@ function nSets(ex){const w=WEEKS.find(x=>x.id===W);
 function syncSeria(id,j){
   const d=(log[id]||{})[j]; if(!d||!d.kg||!d.rp) return;
   const [wk,dz,i]=id.split('_'); const ex=PLAN[dz][+i]; if(!ex) return;
-  const w=WEEKS.find(x=>x.id===wk)||{};
+  const w=wkInfo(wk);
   const isT=wk==='t';
-  kolejkuj({type:'trening',rows:[{data:dzis(),tydzien:w.label||wk,dzien:dz,cwiczenie:ex.n,
+  kolejkuj({type:'trening',rows:[{data:dzis(),tydzien:w.sl||wk,dzien:dz,cwiczenie:ex.n,
     seria:String(j+1),ciezar:d.kg,powt:d.rp,rir:w.rir||'',
     uwagi:[(isT&&ex.tw)?(j===0?'seria T':'po \u221220%'):'', (log[id]||{}).uw].filter(Boolean).join(' \u00b7 ')}]});
 }
@@ -294,17 +355,18 @@ function render(){
   const wPom  = D==='W';
 
   /* poziom 1 — sekcje */
-  const TOP=[['tren','Trening','mezocykl'],['W','Pomiary','waga i pas'],
-             ['J','Dieta','posiłki'],['K','Jedzenie','kalkulator'],['P','Plan','zasady']];
+  const TOP=[['tren','Trening'],['W','Waga'],['J','Dieta'],['K','Kalk.'],['P','Plan']];
   document.getElementById('top').innerHTML=TOP.map(function(t){
     const on = t[0]==='tren' ? wTren : D===t[0];
     return '<div class="dy '+(on?'on':'')+'" onclick="setD(\''+(t[0]==='tren'?'A':t[0])+'\')">'+
-      t[1]+'<small>'+t[2]+'</small></div>';}).join('');
+      t[1]+'</div>';}).join('');
 
   /* poziom 2 — tygodnie (trening i pomiary) */
   const wk=document.getElementById('weeks');
   wk.style.display = (wTren||wPom) ? 'flex' : 'none';
-  wk.innerHTML = (wTren||wPom) ? WEEKS.map(function(w){
+  wk.innerHTML = (wTren||wPom) ? MEZO.map(function(m){
+    return '<div class="wk mz '+(m===M?'on':'')+'" onclick="setM(\''+m+'\')">M'+m+'</div>';}).join('')+'<span class="sep"></span>'+
+    WEEKS.filter(function(w){return M==='1'||w.type!=='test';}).map(function(w){
     return '<div class="wk '+(w.type==='dload'?'dl':'')+' '+(w.type==='test'?'tt':'')+' '+
       (w.id===W?'on':'')+'" onclick="setW(\''+w.id+'\')">'+w.label+'</div>';}).join('') : '';
 
@@ -313,11 +375,18 @@ function render(){
   dz.style.display = wTren ? 'flex' : 'none';
   dz.innerHTML = wTren ? DAYS.map(function(d){
     return '<div class="dy '+(d.id===D?'on':'')+'" onclick="setD(\''+d.id+'\')">'+
-      d.id+' \u00b7 '+d.name+'<small>'+d.tag+'</small></div>';}).join('') : '';
+      d.id+'</div>';}).join('') : '';
 
   document.getElementById('main').innerHTML =
     D==='P'? planHTML() : D==='W'? wagaHTML() : D==='K'? kalkHTML() : D==='J'? dietaHTML() : sessHTML();
 }
+function nxt(e,el){
+  if(e.key!=='Enter'&&e.keyCode!==13) return;
+  e.preventDefault();
+  const all=[].slice.call(document.querySelectorAll('#main .row input')), k=all.indexOf(el);
+  const n=all[k+1]; if(n){ n.focus(); try{n.select();}catch(x){} } else el.blur();
+}
+function setM(m){M=m;S.set('rp_m',m).catch(function(){}); if(M!=='1'&&W==='t'){W='1';S.set('rp_w',W).catch(function(){});} render();scrollTo(0,0);}
 function setW(w){W=w;S.set('rp_w',w).catch(function(){});render();scrollTo(0,0);}
 function setD(d){D=d;S.set('rp_d',d).catch(function(){});render();scrollTo(0,0);}
 const timery={};
@@ -328,14 +397,14 @@ function updUw(id,v){
 }
 function syncUwagi(id){
   const [wk,dz,i]=id.split('_'); const ex=PLAN[dz][+i]; if(!ex) return;
-  const w=WEEKS.find(x=>x.id===wk)||{};
+  const w=wkInfo(wk);
   const dane=log[id]||{}; const isT=wk==='t';
   const rows=[];
   Object.keys(dane).forEach(function(j){
     if(isNaN(+j)) return;
     const d=dane[j]; if(!d||!d.kg||!d.rp) return;
     const tag=(isT&&ex.tw)?(+j===0?'seria T':'po \u221220%'):'';
-    rows.push({data:dzis(),tydzien:w.label||wk,dzien:dz,cwiczenie:ex.n,seria:String(+j+1),
+    rows.push({data:dzis(),tydzien:w.sl||wk,dzien:dz,cwiczenie:ex.n,seria:String(+j+1),
       ciezar:d.kg,powt:d.rp,rir:w.rir||'',uwagi:[tag,dane.uw].filter(Boolean).join(' \u00b7 ')});
   });
   if(rows.length) kolejkuj({type:'trening',rows:rows});
@@ -349,9 +418,9 @@ function upd(id,j,f,v){
 function syncSeria(id,j){
   const d=(log[id]||{})[j]; if(!d||!d.kg||!d.rp) return;
   const [wk,dz,i]=id.split('_'); const ex=PLAN[dz][+i]; if(!ex) return;
-  const w=WEEKS.find(x=>x.id===wk)||{};
+  const w=wkInfo(wk);
   const isT=wk==='t';
-  kolejkuj({type:'trening',rows:[{data:dzis(),tydzien:w.label||wk,dzien:dz,cwiczenie:ex.n,
+  kolejkuj({type:'trening',rows:[{data:dzis(),tydzien:w.sl||wk,dzien:dz,cwiczenie:ex.n,
     seria:String(j+1),ciezar:d.kg,powt:d.rp,rir:w.rir||'',
     uwagi:[(isT&&ex.tw)?(j===0?'seria T':'po \u221220%'):'', (log[id]||{}).uw].filter(Boolean).join(' \u00b7 ')}]});
 }
@@ -646,37 +715,38 @@ function anatomia(nazwa){
 }
 
 function sessHTML(){
-  const w=WEEKS.find(x=>x.id===W); let b='';
-  if(w.type==='test') b='<div class="banner test"><b>Tydzie\u0144 testowy.</b> Seria <b>T</b> \u2014 ci\u0119\u017car submaksymalny, dojd\u017a blisko 1 RIR. Potem zdejmij 20% (<b>\u221220</b>) i reszt\u0119 r\u00f3b na maksa. Liczby to propozycje z Twojej historii \u2014 nadpisz, je\u015bli wyjdzie inaczej.<br><br><b>Na tydzie\u0144 1:</b> ten sam ci\u0119\u017car co w serii T, ale zatrzymuj si\u0119 3\u20134 powt\u00f3rzenia wcze\u015bniej.</div>';
-  else if(w.type==='dload') b='<div class="banner dload"><b>Deload.</b> Po\u0142owa serii, ~60% ci\u0119\u017caru, RIR <span class="rir">4\u20135</span>. Masz wyj\u015b\u0107 z poczuciem, \u017ce nic nie zrobi\u0142e\u015b \u2014 to zamierzone.</div>';
-  else b='<div class="banner">Cel na ten tydzie\u0144: <b>RIR</b> <span class="rir">'+w.rir+'</span> \u2014 tyle powt\u00f3rze\u0144 zostawiasz w zapasie. Ci\u0119\u017car ten sam we wszystkich seriach, powt\u00f3rzenia b\u0119d\u0105 spada\u0107.</div>';
-  b+='<div class="legend"><span class="k" style="background:var(--purple)"></span><b style="color:var(--ink)">Fioletowy pasek</b> \u2014 priorytet bloku (klatka, triceps, po\u015bladki). Tylko tym rosn\u0105 serie.<br><span class="k" style="background:#93C5FD"></span><span class="k" style="background:#6EE7B7"></span><span class="k" style="background:#FCD34D"></span><b style="color:var(--ink)">Superserie</b> \u2014 ten sam kolor = robisz na przemian, pe\u0142na przerwa po parze.</div>';
-  const isT = W==='t';
+  const w=WEEKS.find(x=>x.id===W); let b=''; const mz=(M==='1'?'':'M'+M+' \u00b7 ');
+  if(w.type==='test') b='<div class="banner test">T0 \u00b7 seria <b>T</b> \u2192 \u221220% \u2192 reszta</div>';
+  else if(w.type==='dload') b='<div class="banner dload">'+mz+'DL \u00b7 \u00bd serii \u00b7 ~60% \u00b7 RIR <span class="rir">4\u20135</span></div>';
+  else b='<div class="banner">'+mz+w.label+' \u00b7 RIR <span class="rir">'+w.rir+'</span></div>';
+  const isT = W==='t', isDL = W==='d', pk = prevKey();
   return b+PLAN[D].map((ex,i)=>{
-    const id=W+'_'+D+'_'+i, ns=nSets(ex);
+    const id=wkKey(W)+'_'+D+'_'+i, ns=nSets(ex);
+    const dlw=isDL?dlWeight(ex,i):null, st=(W==='1')?startWeight(ex,i):null, pkg=pk?firstKg(pk,D,i):null;
     let rows='';
     for(let j=0;j<ns;j++){
       const d=(log[id]||{})[j]||{};
       const tag = isT&&ex.tw ? (j===0?'T':'\u221220') : (j+1);
-      const ph  = isT&&ex.tw ? (j===0?ex.tw:ex.tw2) : (W==='1'&&ex.t1 ? ex.t1 : 'kg');
+      const ph  = isT&&ex.tw ? (j===0?ex.tw:ex.tw2) : isDL ? (dlw!==null?dlw:'kg') : (st ? st : (pkg||'kg'));
       rows+='<div class="row"><span class="i">'+tag+'</span>'+
-        '<input inputmode="decimal" placeholder="'+ph+'" value="'+(d.kg||'')+'" oninput="upd(\''+id+'\','+j+',\'kg\',this.value)">'+
-        '<input inputmode="numeric" placeholder="powt" value="'+(d.rp||'')+'" oninput="upd(\''+id+'\','+j+',\'rp\',this.value)"></div>';
+        '<input inputmode="decimal" enterkeyhint="next" data-k="kg" placeholder="'+ph+'" value="'+(d.kg||'')+'" oninput="upd(\''+id+'\','+j+',\'kg\',this.value)" onkeydown="nxt(event,this)">'+
+        '<input inputmode="numeric" enterkeyhint="next" data-k="rp" placeholder="powt" value="'+(d.rp||'')+'" oninput="upd(\''+id+'\','+j+',\'rp\',this.value)" onkeydown="nxt(event,this)"></div>';
     }
     let prev='';
-    if(!isNaN(parseInt(W))&&parseInt(W)>1){
-      const p=log[(parseInt(W)-1)+'_'+D+'_'+i];
-      if(p){const t=Object.values(p).filter(x=>x.kg).map(x=>x.kg+'\u00d7'+(x.rp||'?')).join('  ');
-        if(t) prev='<div class="prev">poprzedni tydzie\u0144: <b>'+t+'</b></div>';}
+    if(pk){
+      const p=log[pk+'_'+D+'_'+i];
+      if(p){const t=Object.keys(p).filter(k=>!isNaN(+k)).map(k=>p[k]).filter(x=>x&&x.kg).map(x=>x.kg+'\u00d7'+(x.rp||'?')).join('  ');
+        if(t) prev='<div class="prev">'+wkInfo(pk).label+(wkInfo(pk).m!==M?' (M'+wkInfo(pk).m+')':'')+': <b>'+t+'</b></div>';}
     }
     return '<div class="ex '+(ex.p?'prio':'')+'">'+
       '<div class="exh" onclick="rozwin(this)">'+
-      '<div><h3>'+ex.n+'</h3><div class="m">'+ex.m+(ex.p?' \u00b7 priorytet':'')+'</div>'+
-      '<span class="badge '+(ex.pair?PC[ex.pair]:'b0')+'">'+(ex.pair?('superseria '+D+ex.pair):'solo')+'</span>'+
-      '<div class="rest">przerwa: <b>'+(ex.pair?('0\u201330 s w parze, '+ex.rest+' po parze'):ex.rest)+'</b></div></div>'+
+      '<div><h3>'+ex.n+'</h3>'+
+      '<span class="badge '+(ex.pair?PC[ex.pair]:'b0')+'">'+(ex.pair?(D+ex.pair):'solo')+'</span>'+
+      '<span class="rest"> '+ex.rest+'</span></div>'+
       '<div class="tgt"><div class="s">'+(isT&&ex.tw?ex.tw+' kg':ns+'\u00d7')+'</div>'+
       '<div class="r">'+(isT&&ex.tw?'potem '+ex.tw2+' kg':ex.r+' powt.')+'</div>'+
-      ((W==='1'&&ex.t1)?'<div class="r" style="color:var(--acc)">start '+ex.t1+' kg</div>':'')+'</div></div>'+
+      (st?'<div class="r" style="color:var(--acc)">start '+st+' kg</div>':'')+
+      (isDL&&dlw!==null?'<div class="r" style="color:var(--ok)">DL '+(dlw==='0'?'bez obc.':dlw+' kg')+'</div>':'')+'</div></div>'+
       '<div class="info">'+obrazki(D,i,ex.n)+(ex.w?'<div class="lead">'+ex.w+'</div>':'')+
       '<div class="warm">'+(ex.warm?'<b>Rozgrzewka 12-8-4:</b> 12 powt. ~50% ci\u0119\u017caru roboczego \u2192 8 powt. ~70% \u2192 4 powt. ~85%. Serii rozgrzewkowych nie zapisujesz.':'Rozgrzewka: 1 lekka seria wystarczy.')+'</div></div>'+
       '<div class="sets"><div class="lbl"><span></span><span>ci\u0119\u017car</span><span>powt.</span></div>'+rows+prev+
@@ -883,7 +953,11 @@ function kalkAdd(){
   kalk.skl.push({n:nazwa,g:g,v:[f[1],f[2],f[3]]});
   S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render();
 }
-function kalkG(i,v){ kalk.skl[i].g=parseFloat(v)||0; S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render(); }
+function kalkG(i,v){ kalk.skl[i].g=parseFloat(v)||0; S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{});
+  const ae=document.activeElement, all=[].slice.call(document.querySelectorAll('#main input')), k=all.indexOf(ae);
+  const pos=ae&&ae.selectionStart;
+  render();
+  if(k>=0){ const el=document.querySelectorAll('#main input')[k]; if(el){ el.focus(); try{el.setSelectionRange(pos,pos);}catch(e){} } } }
 function kalkDel(i){ kalk.skl.splice(i,1); S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render(); }
 function kalkClear(){ kalk.skl=[]; S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render(); }
 
@@ -891,7 +965,7 @@ const START='2026-09-07';
 function wagaHTML(){
   const start=START;
   const w=WEEKS.find(x=>x.id===W)||WEEKS[1];
-  const nrT=['t','1','2','3','4','d'].indexOf(W);
+  const nrT = M==='1' ? ['t','1','2','3','4','d'].indexOf(W) : 6+(+M-2)*5+['1','2','3','4','d'].indexOf(W);
   const pon=new Date(start+'T12:00:00'); pon.setDate(pon.getDate()+nrT*7);
   const dni=['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
   let rows='';
@@ -960,8 +1034,7 @@ function wagaHTML(){
     ocena='<div class="legend">Ocena tempa pojawi si\u0119 po drugim tygodniu \u2014 potrzebne s\u0105 dwie \u015brednie do por\u00f3wnania.</div>';
   }
 
-  return '<div class="banner"><b>'+w.label+'</b> \u2014 tydzie\u0144 od '+isoPon+'. Wa\u017c si\u0119 rano na czczo, po toalecie. '+
-    'Liczy si\u0119 <b>\u015brednia tygodniowa</b>, nie pojedynczy pomiar.</div>'+
+  return '<div class="banner"><b>'+(M==='1'?'':'M'+M+' ')+w.label+'</b> \u00b7 '+isoPon+' \u00b7 rano, na czczo</div>'+
     '<div class="ex"><div class="sets" style="padding-top:11px">'+
     '<div class="lbl" style="grid-template-columns:42px 1fr 1fr"><span></span><span>data</span><span>waga (kg)</span></div>'+
     rows+
@@ -1032,6 +1105,7 @@ function doImp(){try{log=JSON.parse(document.getElementById('ta').value);save();
     const kk=await S.get('rp_kalk'); if(kk){try{kalk=JSON.parse(kk);}catch(e){}}
     const w=await S.get('rp_w'); if(w)W=w;
     const d=await S.get('rp_d'); if(d)D=d;
+    const mm=await S.get('rp_m'); if(mm)M=mm;
   }
   render();
   if(S.mode==='none'){ pill('BRAK ZAPISU','err'); return; }
