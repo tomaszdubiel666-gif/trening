@@ -37,6 +37,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(7,11,24,.78);backdrop-fi
 .wk{flex:0 0 auto;padding:6px 12px;border-radius:20px;background:var(--card);border:1px solid var(--line);
     font-size:12px;font-family:"Space Mono",monospace;color:var(--soft);cursor:pointer;white-space:nowrap}
 .wk.mz{font-weight:700}
+.resend{display:block;margin:14px 14px 24px;width:calc(100% - 28px);padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--soft);font:inherit;font-size:13px;font-weight:600}
 #weeks .sep{flex:0 0 1px;background:var(--line);margin:4px 2px}
 .wk.on{background:var(--grad);border-color:transparent;color:#08101F;font-weight:700}
 .wk.dl.on{background:var(--ok);border-color:var(--ok);color:#08101F}
@@ -276,24 +277,38 @@ function kolejkuj(payload){
   try{ S.set('rp_queue',JSON.stringify(kolejka)); }catch(e){}
   wyslij();
 }
-let wysylanie=false;
+let wysylanie=false, wysylanieOd=0;
 async function wyslij(){
-  if(wysylanie||!kolejka.length) return;
+  /* zabezpieczenie: jeśli poprzednia wysyłka zawisła (np. telefon uśpiony w trakcie), odblokuj po 30 s */
+  if(wysylanie && Date.now()-wysylanieOd<30000) return;
+  if(!kolejka.length) return;
   if(!navigator.onLine){ pill(kolejka.length+' w kolejce','warn'); return; }
-  wysylanie=true;
-  while(kolejka.length){
-    const p=kolejka[0];
-    try{
-      await fetch(ENDPOINT,{method:'POST',mode:'no-cors',
-        headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p)});
+  wysylanie=true; wysylanieOd=Date.now();
+  try{
+    while(kolejka.length){
+      const p=kolejka[0];
+      const ac=('AbortController' in window)?new AbortController():null;
+      const t=setTimeout(function(){ if(ac) ac.abort(); },15000);
+      try{
+        await fetch(ENDPOINT,{method:'POST',mode:'no-cors',signal:ac?ac.signal:undefined,
+          headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p)});
+      }finally{ clearTimeout(t); }
       kolejka.shift();
       try{ await S.set('rp_queue',JSON.stringify(kolejka)); }catch(e){}
-    }catch(e){ pill(kolejka.length+' w kolejce','warn'); wysylanie=false; return; }
+      wysylanieOd=Date.now();
+    }
+    pill('w arkuszu','ok');
+  }catch(e){
+    pill(kolejka.length+' w kolejce','warn');
+  }finally{
+    wysylanie=false;
   }
-  wysylanie=false;
-  pill('w arkuszu','ok');
 }
 window.addEventListener('online',wyslij);
+/* ponawiaj przy powrocie do aplikacji i co minutę, dopóki coś czeka */
+document.addEventListener('visibilitychange',function(){ if(!document.hidden) wyslij(); });
+window.addEventListener('focus',wyslij);
+setInterval(function(){ if(kolejka.length) wyslij(); },60000);
 
 /* --- pobranie danych z arkusza: odtwarza wpisy po podmianie kodu --- */
 async function pobierzZArkusza(){
@@ -751,7 +766,20 @@ function sessHTML(){
       '<div class="warm">'+(ex.warm?'<b>Rozgrzewka 12-8-4:</b> 12 powt. ~50% ci\u0119\u017caru roboczego \u2192 8 powt. ~70% \u2192 4 powt. ~85%. Serii rozgrzewkowych nie zapisujesz.':'Rozgrzewka: 1 lekka seria wystarczy.')+'</div></div>'+
       '<div class="sets"><div class="lbl"><span></span><span>ci\u0119\u017car</span><span>powt.</span></div>'+rows+prev+
         '<input class="uw" placeholder="uwagi do \u0107wiczenia\u2026" value="'+((log[id]||{}).uw||'')+'" oninput="updUw(\''+id+'\',this.value)">'+'</div></div>';
-  }).join('');
+  }).join('')+'<button class="resend" onclick="dosliijDzien()">\u21bb Do\u015blij ten trening do arkusza</button>';
+}
+function dosliijDzien(){
+  let n=0;
+  PLAN[D].forEach(function(ex,i){ const id=wkKey(W)+'_'+D+'_'+i;
+    if(log[id] && Object.keys(log[id]).some(k=>!isNaN(+k)&&log[id][k]&&log[id][k].kg&&log[id][k].rp)){ syncUwagi(id); n++; } });
+  pill(n?('wysy\u0142am '+n+' \u0107w.'):'brak wpis\u00f3w', n?'ok':'warn');
+}
+function dosliijTydzien(iso0){
+  let n=0; const p=new Date(iso0+'T12:00:00');
+  for(let k=0;k<7;k++){ const d=new Date(p); d.setDate(p.getDate()+k); const iso=d.toISOString().slice(0,10);
+    const v=(waga.d||{})[iso], ps=(waga.p||{})[iso];
+    if(v||ps){ kolejkuj({type:'waga',data:iso,waga:v||'',pas:ps||'',uwagi:''}); n++; } }
+  pill(n?('wysy\u0142am '+n+' pomiar\u00f3w'):'brak pomiar\u00f3w', n?'ok':'warn');
 }
 
 
@@ -1035,6 +1063,7 @@ function wagaHTML(){
   }
 
   return '<div class="banner"><b>'+(M==='1'?'':'M'+M+' ')+w.label+'</b> \u00b7 '+isoPon+' \u00b7 rano, na czczo</div>'+
+    '<button class="resend" onclick="dosliijTydzien(\''+isoPon+'\')">\u21bb Do\u015blij ten tydzie\u0144 do arkusza</button>'+
     '<div class="ex"><div class="sets" style="padding-top:11px">'+
     '<div class="lbl" style="grid-template-columns:42px 1fr 1fr"><span></span><span>data</span><span>waga (kg)</span></div>'+
     rows+
