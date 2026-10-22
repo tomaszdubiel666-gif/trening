@@ -37,10 +37,24 @@ header{position:sticky;top:0;z-index:20;background:rgba(7,11,24,.78);backdrop-fi
 .wk{flex:0 0 auto;padding:6px 12px;border-radius:20px;background:var(--card);border:1px solid var(--line);
     font-size:12px;font-family:"Space Mono",monospace;color:var(--soft);cursor:pointer;white-space:nowrap}
 .wk.mz{font-weight:700}
+.dchips{display:flex;gap:5px;padding:4px 14px 8px}
+.dchips span{flex:1;text-align:center;padding:9px 2px;font-size:11.5px!important;border-radius:20px;background:var(--card);border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--soft);cursor:pointer;white-space:nowrap}
+.dchips span.on{background:rgba(62,142,255,.16);border-color:var(--acc);color:var(--ink)}
+.dseg{margin:2px 14px 4px}
+.pquick{margin:12px 14px 4px;display:flex;flex-direction:column;gap:8px}
+.pquick .pqa{margin:0}
+.pqa button b{color:var(--acc);font-size:15px;margin-right:2px}
+.tcel{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--line)}
+.tcel span{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
+.tcel b{font-family:"Space Grotesk",sans-serif;font-size:13px;color:var(--ink)}
+.verd{display:flex;align-items:center;gap:8px;font-family:"Space Grotesk",sans-serif;font-size:15px;font-weight:700;letter-spacing:.01em}
+.verd i{flex:0 0 8px;height:8px;border-radius:50%}
 .pseg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
 .pseg span{flex:1;text-align:center;padding:8px 6px;border-radius:9px;font-size:12.5px;font-weight:600;color:var(--soft);cursor:pointer}
 .pseg span.on{background:var(--grad);color:#08101F}
-.pseg.top{margin:12px 14px 4px}
+.pseg.top{margin:10px 14px 2px;background:none;border:none;border-bottom:1px solid var(--line);border-radius:0;padding:0;gap:0}
+.pseg.top span{border-radius:0;padding:10px 6px;font-size:13px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.pseg.top span.on{background:none;color:var(--ink);border-bottom-color:var(--acc)}
 .pseg.sm{flex:0 0 auto;padding:2px}.pseg.sm span{padding:7px 10px;font-size:11.5px}
 .pqa{display:flex;gap:8px;margin:10px 14px 2px;align-items:center}
 .pqa button{flex:1;padding:10px 4px;border-radius:12px;border:1px dashed var(--acc);background:rgba(62,142,255,.08);color:var(--ink);font:inherit;font-size:12.5px;font-weight:700}
@@ -401,7 +415,7 @@ function render(){
   const wPom  = D==='W';
 
   /* poziom 1 — sekcje */
-  const TOP=[['tren','Trening'],['W','Waga'],['J','Dieta'],['K','Gotuj'],['P','Plan']];
+  const TOP=[['tren','Trening'],['W','Waga'],['J','Dieta'],['K','Prep'],['P','Plan']];
   document.getElementById('top').innerHTML=TOP.map(function(t){
     const on = t[0]==='tren' ? wTren : D===t[0];
     return '<div class="dy '+(on?'on':'')+'" onclick="setD(\''+(t[0]==='tren'?'A':t[0])+'\')">'+
@@ -424,7 +438,7 @@ function render(){
       d.id+'</div>';}).join('') : '';
 
   document.getElementById('main').innerHTML =
-    D==='P'? planHTML() : D==='W'? wagaHTML() : D==='K'? ('<div class="pseg top"><span class="'+(kalkTryb==='prep'?'on':'')+'" onclick="kalkTrybSet(\'prep\')">Gotowanie</span><span class="'+(kalkTryb==='kalk'?'on':'')+'" onclick="kalkTrybSet(\'kalk\')">Kalkulator posiłku</span></div>'+(kalkTryb==='prep'?prepHTML():kalkHTML())) : D==='J'? dietaHTML() : sessHTML();
+    D==='P'? planHTML() : D==='W'? wagaHTML() : D==='K'? ('<div class="pseg top"><span class="'+(kalkTryb==='prep'?'on':'')+'" onclick="kalkTrybSet(\'prep\')">Meal prep</span><span class="'+(kalkTryb==='kalk'?'on':'')+'" onclick="kalkTrybSet(\'kalk\')">Kalkulator posiłku</span></div>'+(kalkTryb==='prep'?prepHTML():kalkHTML())) : D==='J'? dietaHTML() : sessHTML();
 }
 /* ciężar wpisany w serii j kopiuje się do kolejnych serii (pustych albo z tym samym starym ciężarem) */
 function kgIn(el){
@@ -884,7 +898,8 @@ const BIALKA=[['Pierś z kurczaka / indyka',23.5,1.25],['Łosoś świeży',20,13
   ['Odżywka białkowa',80,4],['Jajka (1 żółtko)',0,0]];
 const TLUSZCZE=[['Oliwa',100],['Orzechy pekan',72],['Orzechy włoskie / brazylijskie',65],
   ['Migdały',50],['Gorzka czekolada 85%',46],['Siemię lniane mielone',42],['Nasiona chia',31],['Awokado',15]];
-let dietaDzien='T';
+let dietaDzien='T', dietaPos={T:0,N:0}, dietaStr=true;
+const DKROTKO={'Śniadanie — owsianka':'Śniadanie','Posiłek przedtreningowy':'Przed tren.','Szejk potreningowy':'Szejk','Posiłek potreningowy':'Po tren.'};
 
 function dietaHTML(){
   const r5=v=>Math.round(v/5)*5;
@@ -919,7 +934,7 @@ function dietaHTML(){
     pr+=row('Jajka','1 żółtko',Math.max(1,Math.round(1+(need-6.3)/3.6))+' szt.','wnosi ~6 g T');
     let tl='';
     TL.forEach(function(f){ tl+=row(f[0],'',r5(base/(f[1]/100))+' g','10 g T = '+Math.round(10/f[1]*100)+' g'); });
-    return '<div class="dv"><div class="dvh" style="background:'+kolor+'">'+tytul+'</div>'+
+    return '<div class="dv">'+(tytul?'<div class="dvh" style="background:'+kolor+'">'+tytul+'</div>':'')+
       head+
       grp('Węglowodany',zeStraczkami?'dopełnienie':'')+
       row('Kasza / ryż / quinoa','sucha masa',g+' g','')+
@@ -929,13 +944,13 @@ function dietaHTML(){
       (gw?'<div class="dnote">Przy oznaczonych * odejmij tłuszcz, który wnoszą.</div>':'')+'</div>';
   }
 
-  let out='<div class="banner"><b>Schemat posiłków.</b> Z każdej grupy wybierasz jedno. '+
-    'Warianty <b>bez strączków</b> i <b>ze strączkami</b> są wymienne — możesz je mieszać w ciągu dnia.</div>'+
-    '<div class="days" style="padding:0 14px 6px">'+
-    '<div class="dy '+(dietaDzien==='T'?'on':'')+'" onclick="dietaD(\'T\')">Treningowy<small>~3075 kcal</small></div>'+
-    '<div class="dy '+(dietaDzien==='N'?'on':'')+'" onclick="dietaD(\'N\')">Nietreningowy<small>~2515 kcal</small></div></div>';
-
-  POSILKI[dietaDzien].forEach(function(p){
+  const lista=POSILKI[dietaDzien], ip=Math.min(dietaPos[dietaDzien],lista.length-1);
+  let out='<div class="days" style="padding:12px 14px 6px">'+
+    '<div class="dy '+(dietaDzien==='T'?'on':'')+'" onclick="dietaD(\'T\')">Treningowy</div>'+
+    '<div class="dy '+(dietaDzien==='N'?'on':'')+'" onclick="dietaD(\'N\')">Nietreningowy</div></div>'+
+    '<div class="dchips">'+lista.map(function(p,i){ return '<span class="'+(i===ip?'on':'')+'" onclick="dietaP('+i+')">'+(DKROTKO[p[0]]||p[0])+'</span>'; }).join('')+'</div>'+
+    (lista[ip][5]===''?'<div class="pseg dseg"><span class="'+(dietaStr?'on':'')+'" onclick="dietaS(true)">Ze strączkami</span><span class="'+(!dietaStr?'on':'')+'" onclick="dietaS(false)">Bez strączków</span></div>':'');
+  [lista[ip]].forEach(function(p){
     const [nm,W,B,T,wg,typ]=p;
     let body='', jedna=false;
     if(typ==='ows'){
@@ -964,8 +979,8 @@ function dietaHTML(){
         row('Nasiona chia','','32 g','')+row('Siemię lniane mielone','','24 g','')+row('Orzechy włoskie','','15 g','')+
         '<div class="dnote">Ten tłuszcz jest odjęty od posiłku potreningowego — dlatego ma on cel 15 g zamiast 25 g.</div></div>';
     } else {
-      body=wariant('Bez strączków','var(--acc)',W,B,T,wg,false)+
-           wariant('Ze strączkami','#5B4A7A',W,B,T,wg,true);
+      jedna=true;
+      body=wariant(null,'',W,B,T,wg,dietaStr);
     }
     out+='<div class="dcard"><div class="dhead"><h3>'+nm+'</h3>'+
       '<div class="cel">cel: <b>'+W+'</b> W · <b>'+B+'</b> B · <b>'+T+'</b> T'+
@@ -978,6 +993,8 @@ function dietaHTML(){
   return out;
 }
 function dietaD(v){ dietaDzien=v; render(); }
+function dietaP(i){ dietaPos[dietaDzien]=i; render(); }
+function dietaS(v){ dietaStr=v; render(); }
 
 
 /* ================= GOTOWANIE: ile kaszy / strączków / płatków / chleba przygotować ================= */
@@ -1052,8 +1069,8 @@ function prepHTML(){
   const nic=!(s_.k||s_.st||s_.pl||s_.ch);
   const sum='<div class="psum">'+(nic?'<div class="pempty">Dodaj posiłki, które gotujesz</div>':
     tile('kasza / ryż / quinoa',s_.k,' g')+tile('strączki suche',s_.st,' g')+tile('płatki owsiane',s_.pl,' g')+tile('chleb żytni',s_.ch,' g'))+'</div>';
-  const out='<div class="pqa"><button onclick="prepDzien(\'T\')">+ dzień T</button><button onclick="prepDzien(\'N\')">+ dzień N</button>'+
-    '<div class="pseg sm"><span class="'+(prep.ze?'on':'')+'" onclick="prepZe(true)">ze str.</span><span class="'+(!prep.ze?'on':'')+'" onclick="prepZe(false)">bez</span></div></div>'+
+  const out='<div class="pquick"><div class="pseg"><span class="'+(prep.ze?'on':'')+'" onclick="prepZe(true)">Ze strączkami</span><span class="'+(!prep.ze?'on':'')+'" onclick="prepZe(false)">Bez strączków</span></div>'+
+    '<div class="pqa"><button onclick="prepDzien(\'T\')"><b>+</b> Dzień treningowy</button><button onclick="prepDzien(\'N\')"><b>+</b> Dzień nietreningowy</button></div></div>'+
     '<div class="psec">Obiady</div>'+ob+'<div class="psec">Śniadanie i kolacja</div>'+inn+por+
     (nic?'':'<div class="pclr" onclick="prepClear()">wyczyść</div>')+sum;
   setTimeout(prepPorcje,0);
@@ -1083,7 +1100,7 @@ function kalkHTML(){
     const r=cel[k]-sum[k];
     const kol = Math.abs(r)<=3?'var(--ok)':(r<0?'var(--red)':'var(--soft)');
     bilans+='<div style="text-align:center"><div style="font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.08em">'+naz[k]+'</div>'+
-      '<div style="font-family:Barlow Condensed;font-size:21px;font-weight:700">'+sum[k].toFixed(0)+'<span style="font-size:13px;color:var(--soft)">/'+cel[k]+'</span></div>'+
+      '<div style="font-family:Space Grotesk,sans-serif;font-size:21px;font-weight:700">'+sum[k].toFixed(0)+'<span style="font-size:13px;color:var(--soft)">/'+cel[k]+'</span></div>'+
       '<div style="font-size:11px;color:'+kol+'">'+(r>=0?'brakuje '+r.toFixed(0):'ponad '+(-r).toFixed(0))+'</div></div>';
   }
   const kcal=sum[0]*4+sum[1]*4+sum[2]*9, kcalCel=cel[0]*4+cel[1]*4+cel[2]*9;
@@ -1123,6 +1140,7 @@ function kalkDel(i){ kalk.skl.splice(i,1); S.set('rp_kalk',JSON.stringify(kalk))
 function kalkClear(){ kalk.skl=[]; S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render(); }
 
 const START='2026-09-07';
+const CEL_TEMPO='<div class="tcel"><span>Tempo</span><b>cel +0,14 kg / tydz.</b></div>';
 function wagaHTML(){
   const start=START;
   const w=WEEKS.find(x=>x.id===W)||WEEKS[1];
@@ -1178,24 +1196,26 @@ function wagaHTML(){
       kol='var(--warn)'; tyt='Pas rośnie szybciej niż masa';
       tekst='Waga +'+dW.toFixed(2)+' kg, ale pas +'+dP.toFixed(1)+' cm. To sygnał, że przyrost idzie w tłuszcz — odejmij <b>−25 g węglowodanów</b>.';
     }
-    ocena='<div class="ex"><div class="sets" style="padding:11px">'+
-      '<div style="font-family:Barlow Condensed;font-size:16px;font-weight:700;color:'+kol+'">'+tyt+'</div>'+
+    ocena='<div class="ex"><div class="sets" style="padding:12px">'+CEL_TEMPO+
+      '<div class="verd" style="color:'+kol+'"><i style="background:'+kol+'"></i>'+tyt+'</div>'+
       '<div style="font-size:12px;color:var(--soft);line-height:1.55;margin-top:5px">'+tekst+'</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;padding-top:9px;border-top:1px solid var(--line);text-align:center">'+
       '<div><div style="font-size:10px;color:var(--soft);text-transform:uppercase">poprzedni</div>'+
-        '<div style="font-family:Barlow Condensed;font-size:18px;font-weight:700">'+przed.sr.toFixed(2)+'</div></div>'+
+        '<div style="font-family:Space Grotesk,sans-serif;font-size:18px;font-weight:700">'+przed.sr.toFixed(2)+'</div></div>'+
       '<div><div style="font-size:10px;color:var(--soft);text-transform:uppercase">teraz</div>'+
-        '<div style="font-family:Barlow Condensed;font-size:18px;font-weight:700">'+teraz.sr.toFixed(2)+'</div></div>'+
+        '<div style="font-family:Space Grotesk,sans-serif;font-size:18px;font-weight:700">'+teraz.sr.toFixed(2)+'</div></div>'+
       '<div><div style="font-size:10px;color:var(--soft);text-transform:uppercase">zmiana</div>'+
-        '<div style="font-family:Barlow Condensed;font-size:18px;font-weight:700;color:'+kol+'">'+(dW>=0?'+':'')+dW.toFixed(2)+'</div></div>'+
+        '<div style="font-family:Space Grotesk,sans-serif;font-size:18px;font-weight:700;color:'+kol+'">'+(dW>=0?'+':'')+dW.toFixed(2)+'</div></div>'+
       '</div>'+
       (dP!==null?'<div class="prev" style="padding-top:7px">pas: '+pasP.toFixed(1)+' \u2192 '+pasT.toFixed(1)+' cm ('+(dP>=0?'+':'')+dP.toFixed(1)+')</div>':'')+
       '</div></div>';
   } else if(teraz && !przed){
-    ocena='<div class="legend">Ocena tempa pojawi si\u0119 po drugim tygodniu \u2014 potrzebne s\u0105 dwie \u015brednie do por\u00f3wnania.</div>';
+    ocena='<div class="ex"><div class="sets" style="padding:12px">'+CEL_TEMPO+'<div style="font-size:12px;color:var(--soft);margin-top:6px">Ocena pojawi si\u0119 po drugim tygodniu pomiar\u00f3w.</div></div></div>';
+  } else {
+    ocena='<div class="ex"><div class="sets" style="padding:12px">'+CEL_TEMPO+'</div></div>';
   }
 
-  return '<div class="banner"><b>'+(M==='1'?'':'M'+M+' ')+w.label+'</b> \u00b7 '+isoPon+' \u00b7 rano, na czczo</div>'+
+  return '<div class="banner"><b>'+(M==='1'?'':'M'+M+' ')+w.label+'</b> \u00b7 '+isoPon+'</div>'+
     '<div class="ex"><div class="sets" style="padding-top:11px">'+
     '<div class="lbl" style="grid-template-columns:42px 1fr 1fr"><span></span><span>data</span><span>waga (kg)</span></div>'+
     rows+
@@ -1207,9 +1227,7 @@ function wagaHTML(){
     '<span style="font-size:11.5px;color:var(--soft);align-self:center">pomiar w '+isoPon.slice(5)+'</span>'+
     '<input inputmode="decimal" placeholder="79" value="'+pas+'" oninput="updPas(\''+isoPon+'\',this.value)"></div>'+
     '</div></div>'+
-    ocena+
-    '<div class="legend">Cel: <b style="color:var(--ink)">+0,14 kg tygodniowo</b>, ok. 0,6 kg miesi\u0119cznie. '+
-    'Ocena por\u00f3wnuje \u015bredni\u0105 tego tygodnia ze \u015bredni\u0105 poprzedniego.</div>';
+    ocena;
 }
 function updDzien(iso,v){
   waga.d=waga.d||{}; waga.d[iso]=v;
