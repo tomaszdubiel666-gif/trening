@@ -240,7 +240,9 @@ const PLAN={
 const WEEKS=[{id:'t',label:'T0',sl:'Test',type:'test'},{id:'1',label:'T1',sl:'Tydz. 1',type:'acc',rir:'3\u20134'},
  {id:'2',label:'T2',sl:'Tydz. 2',type:'acc',rir:'2\u20133'},{id:'3',label:'T3',sl:'Tydz. 3',type:'acc',rir:'1\u20132'},
  {id:'4',label:'T4',sl:'Tydz. 4',type:'acc',rir:'0\u20131'},{id:'d',label:'DL',sl:'Deload',type:'dload',rir:'4\u20135'}];
-const DAYS=[{id:'A'},{id:'B'},{id:'C'},{id:'D'}];
+/* kolejność tygodnia: pon B (nogi), wt A (góra), czw D (nogi), pt C (góra) */
+const DAYS=[{id:'B',w:'pon'},{id:'A',w:'wt'},{id:'D',w:'czw'},{id:'C',w:'pt'}];
+function dzienDzis(){ const g=new Date().getDay(); return {1:'B',2:'A',3:'D',4:'D',5:'C'}[g]||'B'; }
 const PC={2:'b2',3:'b3',4:'b4'};
 
 /* Warstwa zapisu: najpierw mechanizm Claude, potem pamiec przegladarki */
@@ -427,7 +429,7 @@ function render(){
   const TOP=[['tren','Trening'],['W','Waga'],['J','Dieta'],['K','Prep'],['P','Plan']];
   document.getElementById('top').innerHTML=TOP.map(function(t){
     const on = t[0]==='tren' ? wTren : D===t[0];
-    return '<div class="dy '+(on?'on':'')+'" onclick="setD(\''+(t[0]==='tren'?'A':t[0])+'\')">'+
+    return '<div class="dy '+(on?'on':'')+'" onclick="setD(\''+(t[0]==='tren'?dzienDzis():t[0])+'\')">'+
       t[1]+'</div>';}).join('');
 
   /* poziom 2 — tygodnie (trening i pomiary) */
@@ -444,7 +446,7 @@ function render(){
   dz.style.display = wTren ? 'flex' : 'none';
   dz.innerHTML = wTren ? DAYS.map(function(d){
     return '<div class="dy '+(d.id===D?'on':'')+'" onclick="setD(\''+d.id+'\')">'+
-      d.id+'</div>';}).join('') : '';
+      d.id+'<small>'+d.w+'</small></div>';}).join('') : '';
 
   document.getElementById('main').innerHTML =
     D==='P'? planHTML() : D==='W'? wagaHTML() : D==='K'? ('<div class="pseg top"><span class="'+(kalkTryb==='prep'?'on':'')+'" onclick="kalkTrybSet(\'prep\')">Meal prep</span><span class="'+(kalkTryb==='kalk'?'on':'')+'" onclick="kalkTrybSet(\'kalk\')">Kalkulator posiłku</span></div>'+(kalkTryb==='prep'?prepHTML():kalkHTML())) : D==='J'? dietaHTML() : sessHTML();
@@ -1282,6 +1284,7 @@ function updPas(iso,v){
   },1500);
 }
 function planHTML(){return '<div class="doc">'+
+'<h2>Tydzie\u0144</h2><p><b>Pon</b> B nogi \u00b7 <b>Wt</b> A g\u00f3ra (+ interwa\u0142y od fazy 2 kondycji) \u00b7 <b>\u015ar</b> lekkie cardio \u00b7 <b>Czw</b> D nogi \u00b7 <b>Pt</b> C g\u00f3ra \u00b7 <b>Sob</b> trucht \u00b7 <b>Nd</b> d\u0142ugi marsz. Po treningu g\u00f3ry nigdy nie ma nast\u0119pnego dnia n\u00f3g, wi\u0119c ostre cardio nie podcina przysiadu ani martwego ci\u0105gu.</p>'+
 '<h2>Struktura bloku</h2><p>Sze\u015b\u0107 tygodni: <b>tydzie\u0144 testowy</b>, cztery tygodnie akumulacji, <b>deload</b>. Potem nast\u0119pny mezocykl od nowa, z ci\u0119\u017carami z ostatniego tygodnia.</p>'+
 '<table><tr><th>Tydzie\u0144</th><th>Serie</th><th>RIR</th></tr>'+
 '<tr><td>Testowy</td><td class="n">3</td><td class="n">\u2014</td></tr>'+
@@ -1318,6 +1321,7 @@ function doImp(){try{log=JSON.parse(document.getElementById('ta').value);save();
     const kk=await S.get('rp_kalk'); if(kk){try{kalk=JSON.parse(kk);}catch(e){}}
     const w=await S.get('rp_w'); if(w)W=w;
     const d=await S.get('rp_d'); if(d)D=d;
+    if(TRENING.indexOf(D)>=0) D=dzienDzis();
     const mm=await S.get('rp_m'); if(mm)M=mm;
     const ipc=await S.get('rp_ip'); if(ipc){try{applyGotowanie(JSON.parse(ipc));}catch(e){}}
     const dd=await S.get('rp_dieta'); if(dd){try{applyDieta(JSON.parse(dd));}catch(e){}}
