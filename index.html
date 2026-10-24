@@ -49,6 +49,14 @@ header{position:sticky;top:0;z-index:20;background:rgba(7,11,24,.78);backdrop-fi
 .tcel b{font-family:"Space Grotesk",sans-serif;font-size:13px;color:var(--ink)}
 .verd{display:flex;align-items:center;gap:8px;font-family:"Space Grotesk",sans-serif;font-size:15px;font-weight:700;letter-spacing:.01em}
 .verd i{flex:0 0 8px;height:8px;border-radius:50%}
+.pcard.ip{padding:12px 14px}
+.pcard.ip select{width:100%;padding:10px;border-radius:11px;border:1px solid var(--line);background:var(--card2);color:var(--ink);font:inherit;font-size:14px;font-weight:700}
+.ipg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0 8px;text-align:center}
+.ipg b{display:block;font-family:"Space Grotesk",sans-serif;font-size:19px;color:var(--ink)}.ipg b small{font-size:11px;color:var(--soft)}
+.ipg span{display:block;font-size:10px;color:var(--soft);margin-top:1px;line-height:1.25}
+.ipn{font-size:11.5px;color:var(--soft);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.ipst{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:6px;background:rgba(251,191,36,.15);color:var(--warn);text-transform:uppercase;letter-spacing:.05em}
+.ipst.ok{background:rgba(52,211,153,.14);color:var(--ok)}
 .pseg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
 .pseg span{flex:1;text-align:center;padding:8px 6px;border-radius:9px;font-size:12.5px;font-weight:600;color:var(--soft);cursor:pointer}
 .pseg span.on{background:var(--grad);color:#08101F}
@@ -381,6 +389,7 @@ async function pobierzZArkusza(){
         if(x.pas  && !waga.p[dt]) waga.p[dt]=String(x.pas);
       });
     }
+    if(j.gotowanie && applyGotowanie(j.gotowanie)){ await S.set('rp_ip',JSON.stringify(j.gotowanie)); }
     if(j.dieta && applyDieta(j.dieta)){ await S.set('rp_dieta',JSON.stringify(j.dieta)); if(D==='J'||D==='K') n=n||1; }
     await S.set('rp_log',JSON.stringify(log));
     await S.set('rp_waga',JSON.stringify(waga));
@@ -999,6 +1008,30 @@ function dietaS(v){ dietaStr=v; render(); }
 
 /* ================= GOTOWANIE: ile kaszy / strączków / płatków / chleba przygotować ================= */
 let kalkTryb='prep';
+/* Instant Pot — nadpisywane z zakładki „Gotowanie” w arkuszu: [produkt, grupa, przygotowanie, woda/100g, czas, NPR, uwagi, status] */
+let IP=[["Ryż brązowy","kasza","bez moczenia",150,22,10,"Wyrównaj ryż przed startem, nie mieszaj. Po NPR rozkrusz widelcem i zostaw 5 min pod pokrywą.","sprawdzone"],
+ ["Quinoa czarna","kasza","opłucz, bez moczenia",126,3,5,"","sprawdzone"],
+ ["Kasza gryczana niepalona","kasza","opłucz do klarownej wody",135,3,0,"Woda zmniejszona po teście (przy 150 ml było za mokro).","w testach"],
+ ["Soczewica zielona","strączki","bez moczenia",175,6,0,"Łyżka oleju na pianę. Przy 400 g i więcej daj ok. 190 ml na 100 g.","sprawdzone"],
+ ["Fasola biała Piękny Jaś","strączki","namoczona 12 h w osolonej wodzie",240,22,10,"Łyżka oleju, sól po ugotowaniu.","w testach"],
+ ["Fasola czerwona kidney","strączki","namoczona 12 h w osolonej wodzie",235,12,15,"Nie skracaj ciśnienia poniżej 10 min (toksyna w niedogotowanej kidney).","sprawdzone"],
+ ["Fasola mung","strączki","namoczona",150,3,0,"Przy NPR rozgotowała się w papkę.","do testu"]];
+function applyGotowanie(rows){
+  if(!rows||!rows.length) return false;
+  const out=rows.filter(r=>r&&r[0]&&!isNaN(num(r[3]))&&!isNaN(num(r[4]))).map(r=>[String(r[0]),String(r[1]||'').toLowerCase().indexOf('str')===0?'strączki':'kasza',String(r[2]||''),num(r[3]),num(r[4]),num(r[5])||0,String(r[6]||''),String(r[7]||'')]);
+  if(!out.length) return false; IP=out; return true;
+}
+function prepIP(g,v){ prep['ip_'+g]=v; prepSave(); render(); }
+function ipKarta(g,ilosc){
+  const lista=IP.filter(r=>r[1]===g); if(!lista.length||!ilosc) return '';
+  let wyb=lista.find(r=>r[0]===prep['ip_'+g])||lista[0];
+  const woda=Math.round(ilosc*wyb[3]/100/10)*10;
+  const st=wyb[7]?'<span class="ipst '+(wyb[7]==='sprawdzone'?'ok':'')+'">'+wyb[7]+'</span>':'';
+  return '<div class="pcard ip"><select onchange="prepIP(\''+g+'\',this.value)">'+lista.map(r=>'<option'+(r===wyb?' selected':'')+'>'+r[0]+'</option>').join('')+'</select>'+
+    '<div class="ipg"><div><b>'+ilosc+'<small> g</small></b><span>suchego</span></div><div><b>'+woda+'<small> ml</small></b><span>wody</span></div>'+
+    '<div><b>'+wyb[4]+'<small> min</small></b><span>ciśnienie</span></div><div><b>'+(wyb[5]?wyb[5]+'<small> min</small>':'0')+'</b><span>'+(wyb[5]?'NPR, potem zawór':'zawór od razu')+'</span></div></div>'+
+    '<div class="ipn">'+wyb[2]+(wyb[6]?' · '+wyb[6]:'')+' '+st+'</div></div>';
+}
 let prep={c:{},ze:true,ck:'',cs:''};
 function prepDef(){
   const r5=v=>Math.round(v/5)*5, K=DP.kasza_W/100, LG=DP.straczki_g*DP.straczki_W/100, CH=DP.chleb_W/100;
@@ -1071,7 +1104,8 @@ function prepHTML(){
     tile('kasza / ryż / quinoa',s_.k,' g')+tile('strączki suche',s_.st,' g')+tile('płatki owsiane',s_.pl,' g')+tile('chleb żytni',s_.ch,' g'))+'</div>';
   const out='<div class="pquick"><div class="pseg"><span class="'+(prep.ze?'on':'')+'" onclick="prepZe(true)">Ze strączkami</span><span class="'+(!prep.ze?'on':'')+'" onclick="prepZe(false)">Bez strączków</span></div>'+
     '<div class="pqa"><button onclick="prepDzien(\'T\')"><b>+</b> Dzień treningowy</button><button onclick="prepDzien(\'N\')"><b>+</b> Dzień nietreningowy</button></div></div>'+
-    '<div class="psec">Obiady</div>'+ob+'<div class="psec">Śniadanie i kolacja</div>'+inn+por+
+    '<div class="psec">Obiady</div>'+ob+'<div class="psec">Śniadanie i kolacja</div>'+inn+
+    ((s_.k||s_.st)?'<div class="psec">Instant Pot</div>'+ipKarta('kasza',s_.k)+ipKarta('strączki',s_.st):'')+por+
     (nic?'':'<div class="pclr" onclick="prepClear()">wyczyść</div>')+sum;
   setTimeout(prepPorcje,0);
   return out;
@@ -1285,6 +1319,7 @@ function doImp(){try{log=JSON.parse(document.getElementById('ta').value);save();
     const w=await S.get('rp_w'); if(w)W=w;
     const d=await S.get('rp_d'); if(d)D=d;
     const mm=await S.get('rp_m'); if(mm)M=mm;
+    const ipc=await S.get('rp_ip'); if(ipc){try{applyGotowanie(JSON.parse(ipc));}catch(e){}}
     const dd=await S.get('rp_dieta'); if(dd){try{applyDieta(JSON.parse(dd));}catch(e){}}
     const pp=await S.get('rp_prep'); if(pp){try{prep=Object.assign(prep,JSON.parse(pp));}catch(e){}}
   }
