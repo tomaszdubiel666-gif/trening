@@ -1163,14 +1163,14 @@ function kalkHTML(){
 function kalkDzien(v){ kalk.dzien=v; kalk.posilek=Object.keys(CELE).find(k=>k.startsWith(v+'|')); render(); }
 function kalkPos(v){ kalk.posilek=v; render(); }
 function kalkAdd(){
-  const sel=document.getElementById('ksel').value, g=parseFloat(document.getElementById('kg').value);
+  const sel=document.getElementById('ksel').value, g=num(document.getElementById('kg').value);
   if(!g||g<=0) return;
   const [grupa,nazwa]=sel.split('|');
   const f=FOOD[grupa].find(x=>x[0]===nazwa); if(!f) return;
   kalk.skl.push({n:nazwa,g:g,v:[f[1],f[2],f[3]]});
   S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{}); render();
 }
-function kalkG(i,v){ kalk.skl[i].g=parseFloat(v)||0; S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{});
+function kalkG(i,v){ kalk.skl[i].g=num(v)||0; S.set('rp_kalk',JSON.stringify(kalk)).catch(()=>{});
   const ae=document.activeElement, all=[].slice.call(document.querySelectorAll('#main input')), k=all.indexOf(ae);
   const pos=ae&&ae.selectionStart;
   render();
@@ -1199,20 +1199,20 @@ function wagaHTML(){
   const isoPon=pon.toISOString().slice(0,10);
   const pas=(waga.p&&waga.p[isoPon])||'';
   const vals=[]; for(let k=0;k<7;k++){const d=new Date(pon);d.setDate(pon.getDate()+k);
-    const q=(waga.d&&waga.d[d.toISOString().slice(0,10)]); if(q) vals.push(parseFloat(q));}
+    const q=(waga.d&&waga.d[d.toISOString().slice(0,10)]); if(q) vals.push(num(q));}
   const sr=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length):0;
   /* --- porównanie z poprzednim tygodniem --- */
   function sredniaTyg(offset){
     const p=new Date(pon); p.setDate(pon.getDate()+offset*7);
     const v=[];
     for(let k=0;k<7;k++){ const d=new Date(p); d.setDate(p.getDate()+k);
-      const q=(waga.d||{})[d.toISOString().slice(0,10)]; if(q) v.push(parseFloat(q)); }
+      const q=(waga.d||{})[d.toISOString().slice(0,10)]; if(q) v.push(num(q)); }
     return v.length ? {sr:v.reduce((a,b)=>a+b,0)/v.length, n:v.length} : null;
   }
   function pasTyg(offset){
     const p=new Date(pon); p.setDate(pon.getDate()+offset*7);
     const q=(waga.p||{})[p.toISOString().slice(0,10)];
-    return q?parseFloat(q):null;
+    return q?num(q):null;
   }
   const teraz=sredniaTyg(0), przed=sredniaTyg(-1);
   const pasT=pasTyg(0), pasP=pasTyg(-1);
