@@ -887,7 +887,7 @@ N:[['Śniadanie — owsianka',53,40,32,0,'ows'],
    ['Obiad',45,35,30,250,''],
    ['Kolacja',28,35,30,200,'']]};
 /* parametry diety — nadpisywane z zakładki „Dieta” w arkuszu */
-let DP={platki_T:105,platki_N:55,maslo_orzechowe_g:15,straczki_g:50,straczki_W:49.2,kasza_W:68,chleb_W:48};
+let DP={platki_T:105,platki_N:55,maslo_orzechowe_g:15,ziemniaki_W:17,straczki_g:50,straczki_W:49.2,kasza_W:68,chleb_W:48};
 const DKEYS={T_ows:['T',0,'Śniadanie (owsianka)'],T_pre:['T',1,'Posiłek przedtreningowy'],T_szejk:['T',2,'Szejk potreningowy'],
   T_post:['T',3,'Posiłek potreningowy'],T_kol:['T',4,'Kolacja'],N_ows:['N',0,'Śniadanie (owsianka)'],
   N_lunch:['N',1,'Lunch'],N_obiad:['N',2,'Obiad'],N_kol:['N',3,'Kolacja']};
@@ -950,6 +950,7 @@ function dietaHTML(){
       grp('Węglowodany',zeStraczkami?'dopełnienie':'')+
       row('Kasza / ryż / quinoa','sucha masa',g+' g','')+
       row('Chleb żytni','zamiennik',r5(rem/(CH/100))+' g','')+
+      row('Ziemniaki','surowe ze skórką, zamiennik',r5(rem/(DP.ziemniaki_W/100))+' g','')+
       grp('Białko','do dobrania: '+need+' g')+pr+
       grp('Tłuszcze','do dodania: '+base+' g')+tl+
       (gw?'<div class="dnote">Przy oznaczonych * odejmij tłuszcz, który wnoszą.</div>':'')+'</div>';
